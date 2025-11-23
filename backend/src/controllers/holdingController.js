@@ -187,7 +187,36 @@ export const updateHolding = catchAsync(async (req, res, next) => {
     return next(new AppError('Holding not found', 404));
   }
 
-  // Update fields
+  const oldQuantity = holding.quantity;
+  let quantityDifference = 0;
+
+  // Check if quantity is being changed
+  if (quantity !== undefined && quantity !== oldQuantity) {
+    if (isNaN(quantity) || quantity < 1) {
+      return next(new AppError('Quantity must be a positive number', 400));
+    }
+
+    quantityDifference = quantity - oldQuantity;
+    holding.quantity = quantity;
+
+    // Create transaction for quantity change
+    // If positive difference = BUY, if negative = SELL
+    const transactionType = quantityDifference > 0 ? 'BUY' : 'SELL';
+    const transactionQuantity = Math.abs(quantityDifference);
+    const transactionPrice = purchasePrice !== undefined ? purchasePrice : holding.purchasePrice;
+
+    await Transaction.create({
+      userId: req.user.id,
+      symbol: holding.symbol,
+      type: transactionType,
+      quantity: transactionQuantity,
+      pricePerShare: transactionPrice,
+      totalValue: transactionQuantity * transactionPrice,
+      date: new Date()
+    });
+  }
+
+  // Update price only if provided and no quantity change (correcting mistake)
   if (purchasePrice !== undefined) {
     if (isNaN(purchasePrice) || purchasePrice < 0) {
       return next(new AppError('Purchase price must be a positive number', 400));
@@ -195,30 +224,11 @@ export const updateHolding = catchAsync(async (req, res, next) => {
     holding.purchasePrice = purchasePrice;
   }
 
-  if (quantity !== undefined) {
-    if (isNaN(quantity) || quantity < 1) {
-      return next(new AppError('Quantity must be a positive number', 400));
-    }
-    holding.quantity = quantity;
-  }
-
   if (purchaseDate !== undefined) {
     holding.purchaseDate = new Date(purchaseDate);
   }
 
   await holding.save();
-
-  // Create transaction log for update (as a SELL + BUY)
-  // We'll log this as an UPDATE transaction
-  await Transaction.create({
-    userId: req.user.id,
-    symbol: holding.symbol,
-    type: 'BUY', // Log updates as BUY (for simplicity)
-    quantity: holding.quantity,
-    pricePerShare: holding.purchasePrice,
-    totalValue: holding.quantity * holding.purchasePrice,
-    date: new Date()
-  });
 
   res.status(200).json({
     success: true,
@@ -243,14 +253,17 @@ export const deleteHolding = catchAsync(async (req, res, next) => {
     return next(new AppError('Holding not found', 404));
   }
 
-  // Create SELL transaction before deleting
+  // Get current live price for the SELL transaction
+  const currentPrice = await StockPriceService.getStockPrice(holding.symbol);
+
+  // Create SELL transaction for all shares at current price
   await Transaction.create({
     userId: req.user.id,
     symbol: holding.symbol,
     type: 'SELL',
     quantity: holding.quantity,
-    pricePerShare: holding.purchasePrice,
-    totalValue: holding.quantity * holding.purchasePrice,
+    pricePerShare: currentPrice,
+    totalValue: holding.quantity * currentPrice,
     date: new Date()
   });
 

@@ -3,18 +3,33 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import connectDB from './src/config/database.js';
+import { initializeFirebaseAdmin } from './src/services/firebaseAdmin.js';
 import errorHandler from './src/middleware/errorHandler.js';
+import requestLogger from './src/middleware/requestLogger.js';
 
 // Routes
 import authRoutes from './src/routes/authRoutes.js';
 import holdingRoutes from './src/routes/holdingRoutes.js';
 import transactionRoutes from './src/routes/transactionRoutes.js';
 import dashboardRoutes from './src/routes/dashboardRoutes.js';
+import stockRoutes from './src/routes/stockRoutes.js';
 
 const app = express();
 
 // Connect to database
 connectDB();
+
+// Initialize Firebase Admin SDK (only if Firebase credentials are available)
+try {
+  if (process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    initializeFirebaseAdmin();
+    console.log('Firebase Admin SDK initialized');
+  } else {
+    console.log('Firebase credentials not found. Google OAuth will be disabled.');
+  }
+} catch (error) {
+  console.warn('Firebase initialization skipped:', error.message);
+}
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -25,11 +40,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Request Logger Middleware
+app.use(requestLogger);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/holdings', holdingRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/stocks', stockRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

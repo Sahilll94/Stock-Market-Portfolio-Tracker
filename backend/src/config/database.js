@@ -1,17 +1,14 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGODB_URI;
-    
+
     if (!mongoURI) {
-      throw new Error('MONGODB_URI environment variable is not set');
+      throw new Error("MONGODB_URI environment variable is not set");
     }
 
-    const conn = await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    const conn = await mongoose.connect(mongoURI);
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     return conn;

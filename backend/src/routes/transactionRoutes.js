@@ -7,7 +7,7 @@ const router = express.Router();
 // All routes are protected
 router.use(protect);
 
-// Transaction routes
+// Transaction routes (READ-ONLY - transactions cannot be edited or deleted)
 router.get('/', transactionController.getTransactions);
 router.get('/summary', transactionController.getTransactionSummary);
 router.get('/:id', transactionController.getTransactionById);

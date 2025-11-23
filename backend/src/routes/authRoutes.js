@@ -7,6 +7,7 @@ const router = express.Router();
 // Public routes
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/google-signin', authController.googleSignIn); // Google OAuth endpoint
 
 // Protected routes
 router.get('/me', protect, authController.getMe);

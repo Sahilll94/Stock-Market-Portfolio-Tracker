@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/AppError.js';
 import { sendTokenResponse } from '../utils/auth.js';
+import { verifyIdToken } from '../services/firebaseAdmin.js';
 
 /**
  * Register user
@@ -156,4 +157,69 @@ export const changePassword = catchAsync(async (req, res, next) => {
 
   // Send token response with new token
   sendTokenResponse(user, 200, res);
+});
+
+/**
+ * Google OAuth Sign-In/Sign-Up
+ * POST /api/auth/google-signin
+ */
+export const googleSignIn = catchAsync(async (req, res, next) => {
+  const { idToken, displayName, email, photoURL } = req.body;
+
+  // Validate required fields
+  if (!idToken || !email) {
+    return next(new AppError('Firebase ID token and email are required', 400));
+  }
+
+  try {
+    // Verify Firebase ID token
+    const decodedToken = await verifyIdToken(idToken);
+    const firebaseUid = decodedToken.uid;
+
+    // Check if user exists by email
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // User exists - update last login and firebase details if needed
+      if (!user.firebaseUid) {
+        user.firebaseUid = firebaseUid;
+      }
+      if (!user.photoURL && photoURL) {
+        user.photoURL = photoURL;
+      }
+      if (!user.isEmailVerified) {
+        user.isEmailVerified = true;
+      }
+      user.authProvider = 'google';
+      user.lastLogin = new Date();
+      await user.save();
+    } else {
+      // Create new user from Google data
+      user = await User.create({
+        name: displayName || email.split('@')[0],
+        email,
+        firebaseUid,
+        photoURL: photoURL || null,
+        authProvider: 'google',
+        isEmailVerified: true, // Google users are pre-verified
+        lastLogin: new Date()
+      });
+    }
+
+    // Send token response
+    sendTokenResponse(user, 201, res);
+
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+
+    if (error.message.includes('Firebase')) {
+      return next(new AppError(error.message, 401));
+    }
+
+    if (error.code === 11000) {
+      return next(new AppError('Email already registered', 400));
+    }
+
+    return next(new AppError('Authentication failed: ' + error.message, 500));
+  }
 });

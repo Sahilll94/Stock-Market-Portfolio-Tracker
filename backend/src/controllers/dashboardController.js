@@ -108,6 +108,7 @@ export const getDashboardSummary = catchAsync(async (req, res, next) => {
         totalProfitLossPercentage: parseFloat(totalProfitLossPercentage),
         numberOfHoldings: holdings.length
       },
+      lastUpdatedAt: new Date().toISOString(),
       bestPerformer,
       worstPerformer,
       topHoldings
@@ -198,8 +199,16 @@ export const getPortfolioPerformance = catchAsync(async (req, res, next) => {
     });
   }
 
-  // Group by date and calculate cumulative investment
+  // Get all holdings for current price calculation
+  const holdings = await Holding.find({ userId: req.user.id });
+  
+  // Fetch current prices for all unique symbols
+  const symbols = [...new Set(holdings.map((h) => h.symbol))];
+  const holdingsMap = await StockPriceService.getMultiplePrices(symbols);
+
+  // Group by date and calculate cumulative investment and value
   const performanceByDate = {};
+  const portfolioState = {}; // Track quantity of each stock by date
 
   transactions.forEach((t) => {
     const dateKey = t.date.toISOString().split('T')[0];
@@ -214,14 +223,26 @@ export const getPortfolioPerformance = catchAsync(async (req, res, next) => {
 
     if (t.type === 'BUY') {
       performanceByDate[dateKey].totalInvested += t.totalValue;
+      portfolioState[t.symbol] = (portfolioState[t.symbol] || 0) + t.quantity;
     } else {
       performanceByDate[dateKey].totalInvested -= t.totalValue;
+      portfolioState[t.symbol] = (portfolioState[t.symbol] || 0) - t.quantity;
     }
+
+    // Calculate current value based on portfolio state at this date
+    let currentValue = 0;
+    Object.keys(portfolioState).forEach((symbol) => {
+      const quantity = portfolioState[symbol];
+      const currentPrice = holdingsMap[symbol] || 0;
+      currentValue += quantity * currentPrice;
+    });
+    performanceByDate[dateKey].totalValue = currentValue;
   });
 
   const performance = Object.values(performanceByDate).map((p) => ({
     date: p.date,
-    totalInvested: parseFloat(p.totalInvested.toFixed(2))
+    totalInvested: parseFloat(p.totalInvested.toFixed(2)),
+    totalValue: parseFloat(p.totalValue.toFixed(2))
   }));
 
   res.status(200).json({

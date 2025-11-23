@@ -21,9 +21,32 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Please provide a password'],
       minlength: [6, 'Password must be at least 6 characters'],
       select: false // Don't return password by default
+      // Not required for OAuth users
+    },
+    // Firebase OAuth fields
+    firebaseUid: {
+      type: String,
+      unique: true,
+      sparse: true // Allow null values, but must be unique if provided
+    },
+    photoURL: {
+      type: String,
+      default: null
+    },
+    authProvider: {
+      type: String,
+      enum: ['email', 'google'],
+      default: 'email'
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false
+    },
+    lastLogin: {
+      type: Date,
+      default: null
     }
   },
   {
@@ -31,10 +54,10 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving
+// Hash password before saving (only if password is provided)
 userSchema.pre('save', async function (next) {
-  // Only hash if password is modified
-  if (!this.isModified('password')) {
+  // Only hash if password is modified and provided
+  if (!this.isModified('password') || !this.password) {
     return next();
   }
 
