@@ -64,14 +64,14 @@ export default function RegisterForm() {
     try {
       setLoading(true);
       const response = await authService.register({
-        fullName: data.fullName,
+        name: data.fullName,
         email: data.email,
         password: data.password,
       });
 
       if (response.data.success) {
         setToken(response.data.token);
-        setUser(response.data.user);
+        setUser(response.data.data.user);
         toast.success('Registration successful!');
         navigate('/dashboard');
       }
@@ -232,7 +232,7 @@ export default function RegisterForm() {
         />
         <span className={`text-sm transition-colors ${isDark ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-600 group-hover:text-gray-700'}`}>
           I agree to the{' '}
-          <a href="#" className={`font-semibold transition-colors ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className={`font-semibold transition-colors ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
             terms and conditions
           </a>
         </span>

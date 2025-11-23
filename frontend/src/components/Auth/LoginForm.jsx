@@ -49,7 +49,7 @@ export default function LoginForm() {
 
       if (response.data.success) {
         setToken(response.data.token);
-        setUser(response.data.user);
+        setUser(response.data.data.user);
         
         if (data.rememberMe) {
           localStorage.setItem('rememberEmail', data.email);
@@ -154,7 +154,7 @@ export default function LoginForm() {
             Remember me
           </span>
         </label>
-        <a href="#" className={`text-sm font-medium transition-colors duration-300 flex items-center gap-1 group ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
+        <a href="/forgot-password" className={`text-sm font-medium transition-colors duration-300 flex items-center gap-1 group ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
           Forgot?
           <span className="group-hover:translate-x-0.5 transition-transform">→</span>
         </a>

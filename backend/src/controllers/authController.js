@@ -3,6 +3,8 @@ import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/AppError.js';
 import { sendTokenResponse } from '../utils/auth.js';
 import { verifyIdToken } from '../services/firebaseAdmin.js';
+import { generateOTP, isOTPExpired, getOTPExpirationTime } from '../utils/otp.js';
+import emailService from '../services/EmailService.js';
 
 /**
  * Register user
@@ -222,4 +224,155 @@ export const googleSignIn = catchAsync(async (req, res, next) => {
 
     return next(new AppError('Authentication failed: ' + error.message, 500));
   }
+});
+
+/**
+ * Forgot Password - Send OTP to email
+ * POST /api/auth/forgot-password
+ */
+export const forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  // Validate input
+  if (!email) {
+    return next(new AppError('Please provide an email address', 400));
+  }
+
+  // Check if user exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    // Don't reveal if email exists or not (security best practice)
+    return res.status(200).json({
+      success: true,
+      message: 'If an account exists with this email, an OTP has been sent'
+    });
+  }
+
+  // Check if email service is configured
+  if (!emailService.isConfigured()) {
+    return next(new AppError('Email service is not configured. Please contact support.', 500));
+  }
+
+  try {
+    // Generate OTP
+    const otp = generateOTP(6);
+    const expirationTime = getOTPExpirationTime();
+
+    // Save OTP to user
+    user.resetOTP = otp;
+    user.resetOTPExpires = expirationTime;
+    await user.save();
+
+    // Send OTP email
+    await emailService.sendOTPEmail(email, otp, process.env.APP_NAME || 'PortfolioTrack');
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP has been sent to your email address'
+    });
+  } catch (error) {
+    console.error('Error in forgot password:', error);
+    return next(new AppError('Failed to send OTP. Please try again later.', 500));
+  }
+});
+
+/**
+ * Verify OTP
+ * POST /api/auth/verify-otp
+ */
+export const verifyOTP = catchAsync(async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  // Validate input
+  if (!email || !otp) {
+    return next(new AppError('Please provide email and OTP', 400));
+  }
+
+  // Find user with OTP (need to select the hidden field)
+  const user = await User.findOne({ email }).select('+resetOTP +resetOTPExpires');
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  // Check if OTP exists and is not expired
+  if (!user.resetOTP) {
+    return next(new AppError('No OTP request found. Please request a new OTP.', 400));
+  }
+
+  if (isOTPExpired(user.resetOTPExpires)) {
+    user.resetOTP = null;
+    user.resetOTPExpires = null;
+    await user.save();
+    return next(new AppError('OTP has expired. Please request a new OTP.', 400));
+  }
+
+  // Check if OTP matches
+  if (user.resetOTP !== otp) {
+    return next(new AppError('Invalid OTP', 400));
+  }
+
+  // OTP is valid, create a temporary token for password reset
+  const resetToken = user._id.toString();
+
+  res.status(200).json({
+    success: true,
+    message: 'OTP verified successfully',
+    data: {
+      resetToken, // This token is used for the next step
+      email: user.email
+    }
+  });
+});
+
+/**
+ * Reset Password
+ * POST /api/auth/reset-password
+ */
+export const resetPassword = catchAsync(async (req, res, next) => {
+  const { email, newPassword, confirmPassword } = req.body;
+
+  // Validate input
+  if (!email || !newPassword || !confirmPassword) {
+    return next(new AppError('Please provide email, new password, and confirmation password', 400));
+  }
+
+  if (newPassword !== confirmPassword) {
+    return next(new AppError('Passwords do not match', 400));
+  }
+
+  if (newPassword.length < 6) {
+    return next(new AppError('Password must be at least 6 characters', 400));
+  }
+
+  // Find user with OTP
+  const user = await User.findOne({ email }).select('+resetOTP +resetOTPExpires');
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  // Check if OTP still exists (verify OTP was successful)
+  if (!user.resetOTP) {
+    return next(new AppError('Invalid password reset request. Please start over.', 400));
+  }
+
+  // Update password
+  user.password = newPassword;
+  user.resetOTP = null;
+  user.resetOTPExpires = null;
+  await user.save();
+
+  try {
+    // Send success email
+    await emailService.sendPasswordResetSuccessEmail(email, process.env.APP_NAME || 'PortfolioTrack');
+  } catch (error) {
+    console.error('Failed to send success email:', error);
+    // Don't fail the password reset if email fails
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Password has been reset successfully. Please log in with your new password.'
+  });
 });

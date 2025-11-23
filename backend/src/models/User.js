@@ -47,6 +47,17 @@ const userSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
       default: null
+    },
+    // Password reset OTP
+    resetOTP: {
+      type: String,
+      default: null,
+      select: false // Don't return OTP by default
+    },
+    resetOTPExpires: {
+      type: Date,
+      default: null,
+      select: false // Don't return expiry by default
     }
   },
   {

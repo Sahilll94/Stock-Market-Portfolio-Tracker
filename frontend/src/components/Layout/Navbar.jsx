@@ -94,22 +94,11 @@ export default function Navbar() {
                 }`}
               >
                 <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all group-hover:shadow-lg overflow-hidden border-2" style={{borderColor: isDark ? '#3b82f6' : '#2563eb'}}>
-                  {user?.photoURL || user?.photoUrl ? (
-                    <img 
-                      src={user?.photoURL || user?.photoUrl} 
-                      alt={user?.name} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center">
-                      <span className="text-xs font-bold text-white">
-                        {user?.name?.charAt(0).toUpperCase() || 'U'}
-                      </span>
-                    </div>
-                  )}
+                  <img 
+                    src="/portfolioTrack-logo.png" 
+                    alt={user?.name} 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className={`text-sm font-medium hidden sm:inline truncate max-w-[80px]`}>
                   {user?.name?.split(' ')[0]}
@@ -127,23 +116,12 @@ export default function Navbar() {
                   <div className={`px-4 py-4 border-b ${isDark ? 'border-gray-700/50' : 'border-gray-200/50'}`}>
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 overflow-hidden" style={{borderColor: isDark ? '#3b82f6' : '#2563eb'}}>
-                        {user?.photoURL || user?.photoUrl ? (
-                          <img 
-                            src={user?.photoURL || user?.photoUrl} 
-                            alt={user?.name} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center">
-                            <span className="text-sm font-bold text-white">
-                              {user?.name?.charAt(0).toUpperCase() || 'U'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                      <img 
+                        src="/portfolioTrack-logo.png" 
+                        alt={user?.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                       <div className="flex-1 min-w-0">
                         <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                           {user?.name || 'User'}

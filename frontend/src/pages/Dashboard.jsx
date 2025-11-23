@@ -11,7 +11,13 @@ import toast from 'react-hot-toast';
 import { RotateCcw, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
-  const [summary, setSummary] = useState(null);
+  const [summary, setSummary] = useState({
+    totalInvested: 0,
+    currentPortfolioValue: 0,
+    totalProfitLoss: 0,
+    totalProfitLossPercentage: 0,
+    numberOfHoldings: 0
+  });
   const [distribution, setDistribution] = useState([]);
   const [performance, setPerformance] = useState([]);
   const [holdings, setHoldings] = useState([]);
@@ -27,36 +33,48 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      // Fetch all dashboard data
-      const [summaryRes, distributionRes, performanceRes, holdingsRes] = await Promise.all([
-        dashboardService.getSummary(),
-        dashboardService.getDistribution(),
-        dashboardService.getPerformance(30),
-        holdingsService.getAll(),
-      ]);
-
-      if (summaryRes.data.success) {
-        setSummary(summaryRes.data.data.summary);
-        // Get the last updated time from the backend response
-        if (summaryRes.data.data.lastUpdatedAt) {
-          setLastUpdated(new Date(summaryRes.data.data.lastUpdatedAt));
+      // Fetch all dashboard data with individual error handling
+      try {
+        const summaryRes = await dashboardService.getSummary();
+        if (summaryRes.data.success) {
+          setSummary(summaryRes.data.data.summary);
+          if (summaryRes.data.data.lastUpdatedAt) {
+            setLastUpdated(new Date(summaryRes.data.data.lastUpdatedAt));
+          }
         }
+      } catch (error) {
+        console.error('Failed to fetch summary:', error);
       }
 
-      if (distributionRes.data.success) {
-        setDistribution(distributionRes.data.data.distribution || []);
+      try {
+        const distributionRes = await dashboardService.getDistribution();
+        if (distributionRes.data.success) {
+          setDistribution(distributionRes.data.data.distribution || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch distribution:', error);
       }
 
-      if (performanceRes.data.success) {
-        setPerformance(performanceRes.data.data.performance || []);
+      try {
+        const performanceRes = await dashboardService.getPerformance(30);
+        if (performanceRes.data.success) {
+          setPerformance(performanceRes.data.data.performance || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch performance:', error);
       }
 
-      if (holdingsRes.data.success) {
-        setHoldings(holdingsRes.data.data.holdings || []);
+      try {
+        const holdingsRes = await holdingsService.getAll();
+        if (holdingsRes.data.success) {
+          setHoldings(holdingsRes.data.data.holdings || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch holdings:', error);
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-      toast.error('Failed to load dashboard data');
+      console.error('Dashboard data fetch error:', error);
+      toast.error('Some dashboard data could not be loaded. Please try refreshing.');
     } finally {
       setLoading(false);
     }

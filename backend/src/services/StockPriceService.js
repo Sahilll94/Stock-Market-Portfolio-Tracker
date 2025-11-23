@@ -43,15 +43,38 @@ class StockPriceService {
    */
   async getMultiplePrices(symbols) {
     try {
+      // If no symbols, return empty object
+      if (!symbols || symbols.length === 0) {
+        return {};
+      }
+
       const prices = {};
 
-      for (const symbol of symbols) {
-        prices[symbol] = await this.getStockPrice(symbol);
-      }
+      // Fetch all prices in parallel with error handling for resilience
+      const pricePromises = symbols.map(symbol => 
+        this.getStockPrice(symbol)
+          .then(price => ({ symbol, price, status: 'fulfilled' }))
+          .catch(error => ({ symbol, error, status: 'rejected' }))
+      );
+
+      const results = await Promise.all(pricePromises);
+
+      // Build prices object, skip failed requests
+      results.forEach(result => {
+        if (result.status === 'fulfilled') {
+          prices[result.symbol] = result.price;
+        } else {
+          console.warn(`Failed to fetch price for ${result.symbol}:`, result.error.message);
+          // Use 0 as fallback price to avoid breaking calculations
+          prices[result.symbol] = 0;
+        }
+      });
 
       return prices;
     } catch (error) {
-      throw new AppError(`Failed to fetch multiple prices: ${error.message}`, 500);
+      console.error(`Error in getMultiplePrices: ${error.message}`);
+      // Return empty object instead of throwing
+      return {};
     }
   }
 
@@ -68,7 +91,7 @@ class StockPriceService {
           symbol: symbol,
           apikey: this.apiKey
         },
-        timeout: 10000 // 10 second timeout
+        timeout: 5000 // 5 second timeout
       });
 
       // TwelveData API returns data directly, not nested in response.data.data
@@ -86,6 +109,10 @@ class StockPriceService {
 
       return price;
     } catch (error) {
+      // If it's an axios timeout or network error, log it appropriately
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(`API request timeout for ${symbol}`);
+      }
       // If it's an axios error or API error, throw it
       throw error;
     }

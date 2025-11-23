@@ -155,6 +155,12 @@ System requirements:
    TWELVE_DATA_API_KEY=your-api-key-from-twelvedata
    TWELVEDATA_BASE_URL=https://api.twelvedata.com
    FRONTEND_URL=http://localhost:3000 OR your_frontend_url_for_cors
+   
+   # Email Configuration (Gmail) - For Password Reset OTP
+   EMAIL_USER=your_gmail_address@gmail.com
+   EMAIL_PASSWORD=your_16_character_gmail_app_password
+   APP_NAME=PortfolioTrack
+   
    FIREBASE_PROJECT_ID=your_firebase_project_id
    FIREBASE_PRIVATE_KEY_ID=your_firebase_private_key_id  
    FIREBASE_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----\n
@@ -201,6 +207,12 @@ Backend .env configuration:
    TWELVE_DATA_API_KEY=your-api-key-from-twelvedata
    TWELVEDATA_BASE_URL=https://api.twelvedata.com
    FRONTEND_URL=http://localhost:3000 OR your_frontend_url_for_cors
+   
+   # Email Configuration (Gmail) - For Password Reset OTP
+   EMAIL_USER=your_gmail_address@gmail.com
+   EMAIL_PASSWORD=your_16_character_gmail_app_password
+   APP_NAME=PortfolioTrack
+   
    FIREBASE_PROJECT_ID=your_firebase_project_id
    FIREBASE_PRIVATE_KEY_ID=your_firebase_private_key_id  
    FIREBASE_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----\n
@@ -483,6 +495,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 The application is deployed and available at the following URLs:
 
 > **Frontend (User Interface):** https://portfoliotrack.sahilfolio.live/
+
 > **Backend API:** https://api.portfoliotrack.sahilfolio.live/
 
 **Test Credentials for Review:**

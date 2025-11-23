@@ -9,6 +9,8 @@ import Register from '../pages/Register';
 import Dashboard from '../pages/Dashboard';
 import Holdings from '../pages/Holdings';
 import Transactions from '../pages/Transactions';
+import TermsAndConditions from '../pages/TermsAndConditions';
+import ForgotPassword from '../pages/ForgotPassword';
 
 export const AppRoutes = () => {
   return (
@@ -21,6 +23,8 @@ export const AppRoutes = () => {
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
 
           {/* Protected Routes */}
           <Route
