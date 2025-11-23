@@ -1,0 +1,114 @@
+services:
+  # MongoDB Database Service
+  mongodb:
+    image: mongo:latest
+    container_name: stock_tracker_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-mongouser}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-mongopassword}
+      MONGO_INITDB_DATABASE: ${MONGODB_NAME:-stock-tracker}
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - stock-tracker-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: stock_tracker_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      
+      # MongoDB Configuration
+      # If MONGODB_URI is set, it will be used (MongoDB Atlas)
+      # Otherwise, local MongoDB connection string will be built from MONGODB_USER, MONGODB_PASSWORD, MONGODB_NAME
+      MONGODB_URI: ${MONGODB_URI:-mongodb://${MONGODB_USER:-mongouser}:${MONGODB_PASSWORD:-mongopassword}@mongodb:27017/${MONGODB_NAME:-stock-tracker}?authSource=admin}
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your_super_secret_jwt_key_change_this_in_production}
+      JWT_EXPIRE: 7d
+      JWT_EXPIRE_DAYS: 7
+      
+      # TwelveData API Configuration
+      TWELVEDATA_API_KEY: ${TWELVEDATA_API_KEY}
+      TWELVEDATA_BASE_URL: https://api.twelvedata.com
+      
+      # CORS Configuration
+      FRONTEND_URL: http://localhost
+      
+      # Firebase Configuration
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_PRIVATE_KEY_ID: ${FIREBASE_PRIVATE_KEY_ID}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_CLIENT_ID: ${FIREBASE_CLIENT_ID}
+      FIREBASE_CLIENT_X509_CERT_URL: ${FIREBASE_CLIENT_X509_CERT_URL}
+    depends_on:
+      - mongodb
+    networks:
+      - stock-tracker-network
+    volumes:
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Frontend Service (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: http://localhost:5000/api
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}
+    container_name: stock_tracker_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - stock-tracker-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  stock-tracker-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local

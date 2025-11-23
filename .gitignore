@@ -32,3 +32,15 @@ task.md
 StockPortfolioTracker.postman_collection.json
 todo
 StockPortfolioTracker-Complete-API.postman_collection.json
+
+# Docker and Docker Compose
+.dockerignore
+docker-compose.override.yml
+.docker/
+docker-secrets/
+*.db
+
+# MongoDB data (if running locally)
+mongodb_data/
+mongodb_config/
+dump/

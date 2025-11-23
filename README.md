@@ -76,6 +76,39 @@ Stock Market Portfolio Tracker is a modern, production-ready web application tha
 
 ## Setup & Installation
 
+### Option 1: Docker Setup 
+
+Get the entire application running in seconds with all dependencies containerized!
+
+**Requirements:**
+- Docker Desktop (includes Docker & Docker Compose)
+- [Download Docker Desktop](https://www.docker.com/products/docker-desktop)
+
+**Quick Start:**
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Sahilll94/Stock-Market-Portfolio-Tracker.git
+cd Stock-Market-Portfolio-Tracker
+
+# 2. Create environment file from template
+cp .env.docker .env
+
+# 3. Edit .env with your credentials (Firebase, MongoDB Atlas URI, API keys)
+
+# 4. Start the application
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+**Access the application at:** http://localhost
+
+**For complete Docker setup guide, configuration options, and troubleshooting:**  
+📖 See [DOCKER_SETUP.md](./DOCKER_SETUP.md) and [DOCKER_COMPOSE_GUIDE.md](./DOCKER_COMPOSE_GUIDE.md)
+
+---
+
+### Option 2: Manual Setup
+
 ### Prerequisites
 
 System requirements:
@@ -477,6 +510,7 @@ Displays list of holdings with purchase price, quantity, current value, and prof
 Complete transaction history with date, time, type (BUY/SELL), and filtering options.
 
 **Portfolio Performance**
+
 ![Portfolio Performance](/frontend/public/portfolio-performance.png)
 
 Visual representation of portfolio performance over time with trend analysis.
