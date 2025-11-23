@@ -95,7 +95,7 @@ export default function Navbar() {
               >
                 <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all group-hover:shadow-lg overflow-hidden border-2" style={{borderColor: isDark ? '#3b82f6' : '#2563eb'}}>
                   <img 
-                    src="/portfolioTrack-logo.png" 
+                    src={user?.photoURL || '/portfolioTrack-logo.png'} 
                     alt={user?.name} 
                     className="w-full h-full object-cover"
                   />
@@ -117,7 +117,7 @@ export default function Navbar() {
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 overflow-hidden" style={{borderColor: isDark ? '#3b82f6' : '#2563eb'}}>
                       <img 
-                        src="/portfolioTrack-logo.png" 
+                        src={user?.photoURL || '/portfolioTrack-logo.png'} 
                         alt={user?.name} 
                         className="w-full h-full object-cover"
                       />
