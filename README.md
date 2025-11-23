@@ -239,6 +239,12 @@ npm run preview
 
 ## API Documentation
 
+> You can explore and test all API endpoints using the following Postman Collection:  
+> **[Postman Collection](https://www.postman.com/sahillll94/workspace/portfolio-tracker/collection/36283559-aad8529b-5ff9-4b2c-a785-533e5f464107?action=share&creator=36283559&active-environment=36283559-7bef07fd-160a-49e8-8822-f77d1111269b)**
+
+> **Note:** Set the `base_url` to: `http://api.portfoliotrack.sahilfolio.live/`
+
+
 ### Authentication Endpoints
 
 Register New User
@@ -472,6 +478,7 @@ Complete transaction history with date, time, type (BUY/SELL), and filtering opt
 
 **Portfolio Performance**
 ![Portfolio Performance](/frontend/public/portfolio-performance.png)
+
 Visual representation of portfolio performance over time with trend analysis.
 
 ## Known Issues and Limitations
