@@ -482,11 +482,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 The application is deployed and available at the following URLs:
 
-**Frontend (User Interface):**
-https://portfoliotrack.sahilfolio.live/
-
-**Backend API:**
-https://api.portfoliotrack.sahilfolio.live/
+> **Frontend (User Interface):** https://portfoliotrack.sahilfolio.live/
+> **Backend API:** https://api.portfoliotrack.sahilfolio.live/
 
 **Test Credentials for Review:**
 ```
