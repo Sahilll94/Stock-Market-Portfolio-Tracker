@@ -591,6 +591,6 @@ For technical inquiries or issues, please refer to the detailed code documentati
 
 ---
 
-**Latest Update:** November 2025 | 02:03
-**Version:** 1.0.4
+**Latest Update:** November 2025 | 02:03 <br>
+**Version:** 1.0.4 <br>
 **Repository:** https://github.com/Sahilll94/Stock-Market-Portfolio-Tracker
