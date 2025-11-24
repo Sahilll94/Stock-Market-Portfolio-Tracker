@@ -11,6 +11,7 @@ import Holdings from '../pages/Holdings';
 import Transactions from '../pages/Transactions';
 import TermsAndConditions from '../pages/TermsAndConditions';
 import ForgotPassword from '../pages/ForgotPassword';
+import HowItWorks from '../pages/HowItWorks';
 
 export const AppRoutes = () => {
   return (
@@ -19,6 +20,9 @@ export const AppRoutes = () => {
         <Routes>
           {/* Landing Route */}
           <Route path="/" element={<Landing />} />
+
+          {/* Info Routes */}
+          <Route path="/how-it-works" element={<HowItWorks />} />
 
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />

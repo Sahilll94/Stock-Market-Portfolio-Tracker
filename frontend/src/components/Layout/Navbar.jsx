@@ -27,6 +27,7 @@ export default function Navbar() {
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Holdings', href: '/holdings' },
     { label: 'Transactions', href: '/transactions' },
+    { label: 'How It Works', href: '/how-it-works' },
   ];
 
   const isActive = (href) => location.pathname === href;

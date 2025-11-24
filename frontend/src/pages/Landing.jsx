@@ -129,6 +129,18 @@ export default function Landing() {
 
             {/* Actions */}
             <div className="flex items-center space-x-2">
+              {/* How It Works Link */}
+              <button
+                onClick={() => navigate('/how-it-works')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-300 hidden sm:block ${
+                  isDark
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800/50 active:scale-95'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:scale-95'
+                }`}
+              >
+                How It Works
+              </button>
+
               {/* GitHub Link */}
               <a
                 href="https://github.com/Sahilll94/Stock-Market-Portfolio-Tracker"
@@ -259,10 +271,23 @@ export default function Landing() {
                   >
                     <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${isDark ? 'bg-white' : 'bg-white'}`}></div>
                     <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
-                      <Rocket size={18} className="transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-12" />
-                      <span>Start Tracking</span>
-                    </span>
-                  </button>
+                  <Rocket size={18} className="transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-12" />
+                    <span>Start Tracking</span>
+                  </span>
+                </button>
+                <button
+                  onClick={() => navigate('/how-it-works')}
+                  className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative ${
+                    isDark
+                      ? 'border-2 border-purple-500/50 bg-purple-500/10 text-white hover:border-purple-400 hover:bg-purple-500/20 active:scale-95 hover:shadow-lg hover:shadow-purple-500/30'
+                      : 'border-2 border-purple-600/50 bg-purple-600/10 text-purple-700 hover:border-purple-600 hover:bg-purple-600/20 active:scale-95 hover:shadow-lg hover:shadow-purple-600/30'
+                  }`}
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
+                    <Lightbulb size={18} className="transition-transform duration-300 group-hover:rotate-12" />
+                    <span>How It Works</span>
+                  </span>
+                </button>
                   <button
                     onClick={() => navigate('/login')}
                     className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative ${
