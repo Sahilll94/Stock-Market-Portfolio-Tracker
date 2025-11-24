@@ -1,28 +1,91 @@
-# Stock Portfolio Tracker - Backend
+# Stock Portfolio Tracker - Backend API
 
-A Node.js and Express.js backend for a stock portfolio tracker application. This API allows users to manage their stock holdings, track transactions, and view portfolio analytics.
+A robust Node.js and Express.js REST API for a comprehensive stock portfolio management application. This backend handles user authentication, portfolio management, real-time stock prices, transaction tracking, and advanced portfolio analytics.
 
-> This project uses US stock symbols (AAPL, MSFT, GOOGL, etc.) because TwelveData free plan does not include NSE/BSE. The logic and portfolio management works the same for Indian stocks.
+> This project uses US stock symbols (AAPL, MSFT, GOOGL, etc.) from TwelveData API. The logic and portfolio management works identically for any stock symbol available on the API.
+
+## Overview
+
+**API Base URL**: `https://api.portfoliotrack.sahilfolio.live`
+
+The backend provides:
+- 🔐 JWT-based authentication with email/password and Google OAuth
+- 📈 Real-time stock price integration with TwelveData API
+- 💼 Complete portfolio management (add, edit, delete holdings)
+- 📊 Advanced analytics and dashboard metrics
+- 📝 Complete transaction audit trail
+- ⚡ Intelligent price caching to optimize API usage
+- 🛡️ Security best practices (password hashing, input validation, rate limiting)
 
 ## Features
 
-- **User Authentication**: Register, login, and profile management with JWT
-- **Portfolio Management**: Add, view, update, and delete stock holdings
-- **Real-time Stock Prices**: Integration with TwelveData API for current stock prices
-- **Profit/Loss Calculation**: Automatic P&L calculation for each holding
-- **Transaction History**: Complete audit trail of all buy/sell transactions
-- **Dashboard Analytics**: Portfolio summary, best/worst performers, and distribution charts
-- **Price Caching**: Optimized API calls with intelligent caching
+### Authentication & Security
+- **User Registration** - Email/password signup with validation
+- **User Login** - Secure login with remember me functionality
+- **Google OAuth** - One-click Google Sign-In integration
+- **JWT Authentication** - Token-based authentication (7-day expiry)
+- **Password Hashing** - bcryptjs with 10 salt rounds
+- **Session Management** - Automatic token refresh
+- **Profile Management** - Update user information
+- **Password Reset** - Email-based password recovery with OTP
+- **Protected Routes** - All data endpoints require authentication
+- **User Data Isolation** - Each user can only access their own data
+
+### Portfolio Management
+- **Add Holdings** - Add new stock holdings with purchase details
+- **View Holdings** - Get all holdings with real-time P&L calculations
+- **Update Holdings** - Modify quantity and purchase price
+- **Delete Holdings** - Remove holdings (creates SELL transaction)
+- **Real-time Prices** - Fetch current prices from TwelveData API
+- **P&L Calculations** - Automatic profit/loss in ₹ and %
+- **Portfolio Summary** - Total invested, current value, overall gain/loss
+- **Holdings Filtering** - Filter by symbol or search functionality
+
+### Transaction History
+- **Transaction Recording** - Automatic BUY/SELL transaction creation
+- **Complete Audit Trail** - Immutable transaction history
+- **Transaction Filtering** - Filter by symbol, type, date, amount
+- **Transaction Summary** - Total bought, sold, net investment
+- **Per-Symbol Statistics** - Individual stock transaction summary
+- **Export Transactions** - Download transaction history
+
+### Dashboard & Analytics
+- **Portfolio Summary** - Key metrics at a glance
+- **Performance Tracking** - Portfolio value over time
+- **Portfolio Distribution** - Asset allocation by percentage
+- **Best/Worst Performers** - Top 3 gainers and losers
+- **Custom Date Ranges** - Filter performance by time periods
+- **Real-time Updates** - Data refreshed on each request
+- **Top Holdings** - Display largest positions
+
+### Stock Price Integration
+- **Real-time Prices** - Live price fetching from TwelveData
+- **Smart Caching** - 2-minute cache to optimize API usage
+- **Rate Limiting** - Request throttling to avoid rate limits
+- **Fallback Pricing** - Uses cached prices if API fails
+- **Multiple Stock Symbols** - Batch price fetching
+- **Error Handling** - Graceful degradation on API failures
 
 ## Tech Stack
 
-- **Node.js**: JavaScript runtime
-- **Express.js**: Web framework
-- **MongoDB**: NoSQL database with Mongoose ODM
-- **JWT**: JSON Web Tokens for authentication
-- **bcryptjs**: Password hashing
-- **Axios**: HTTP client for API requests
-- **TwelveData API**: Real-time stock price data
+- **Node.js** - JavaScript runtime (v16+)
+- **Express.js** - Web application framework
+- **MongoDB** - NoSQL database with Mongoose ODM
+- **JWT** - JSON Web Tokens for authentication
+- **bcryptjs** - Password hashing and comparison
+- **Axios** - HTTP client for API requests
+- **Dotenv** - Environment variable management
+- **Cors** - Cross-origin resource sharing
+- **Helmet** - HTTP security headers
+- **Morgan** - HTTP request logging
+- **Nodemon** - Development server with auto-reload
+- **TwelveData API** - Real-time stock price data
+
+## Dev Dependencies
+
+- **ESLint** - Code quality and style checking
+- **Prettier** - Code formatting
+- **Nodemon** - Auto-restart on file changes
 
 ## Project Structure
 
@@ -62,113 +125,154 @@ backend/
 └── .gitignore                    # Git ignore rules
 ```
 
-## Prerequisites
+## Installation & Setup
 
-- Node.js (v16 or higher)
-- MongoDB (Atlas or local)
-- TwelveData API key (sign up at https://twelvedata.com)
+### Prerequisites
+- **Node.js** v16 or higher (`node --version`)
+- **npm** v8 or higher (`npm --version`)
+- **MongoDB** - Atlas (cloud) or local installation
+- **TwelveData API Key** - Free tier from https://twelvedata.com
+- **Gmail Account** - For email service (optional, for password reset)
+- **Firebase Project** - For Google OAuth (optional)
 
-## Installation
-
-1. **Clone the repository** (or extract the files)
-
+### Step 1: Clone & Navigate
 ```bash
 cd backend
 ```
 
-2. **Install dependencies**
-
+### Step 2: Install Dependencies
 ```bash
 npm install
 ```
 
-3. **Set up environment variables**
+This will install all dependencies from `package.json` including:
+- Express.js, Mongoose, JWT, bcryptjs
+- Development tools (nodemon, ESLint, Prettier)
 
-Create a `.env` file in the backend directory and copy from `.env.example`:
+### Step 3: Configure Environment Variables
 
+Copy the example file:
 ```bash
 cp .env.example .env
 ```
 
-Update the `.env` file with your actual values:
+Edit `.env` and update with your actual values:
 
-```
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/stock-tracker?retryWrites=true&w=majority
+```env
+# Database Configuration
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/portfolioDB?retryWrites=true&w=majority
+
+# Server Configuration
 PORT=5000
 NODE_ENV=development
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
+
+# Authentication
+JWT_SECRET=your_super_secret_jwt_key_change_this_in_production_at_least_32_chars
 JWT_EXPIRE=7d
+
+# Stock Price API (TwelveData)
 TWELVEDATA_API_KEY=your_twelvedata_api_key_here
 TWELVEDATA_BASE_URL=https://api.twelvedata.com
+
+# Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:3000
+
+# Firebase Configuration (for Google OAuth)
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_PRIVATE_KEY_ID=your_firebase_private_key_id
+FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk@project.iam.gserviceaccount.com
+FIREBASE_CLIENT_ID=your_firebase_client_id
+FIREBASE_CLIENT_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
+
+# Email Service (for password reset)
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASSWORD=your_gmail_app_specific_password
+APP_NAME=PortfolioTrack
 ```
 
-## Running the Application
+### Step 4: Get Required API Keys
 
-### Development Mode (with auto-reload)
+**TwelveData API Key** (Free)
+1. Go to https://twelvedata.com
+2. Sign up for free account
+3. Get your API key from dashboard
+4. Add to `.env` as `TWELVEDATA_API_KEY`
 
+**Firebase Setup** (for Google OAuth)
+1. Go to https://console.firebase.google.com
+2. Create new project
+3. Download service account key as JSON
+4. Copy values to `.env`
+
+**Gmail Setup** (for email service)
+1. Enable 2-Factor Authentication on Gmail
+2. Generate app-specific password
+3. Use that password in `EMAIL_PASSWORD`
+
+### Step 5: Start the Server
+
+**Development Mode** (with auto-reload):
 ```bash
 npm run dev
 ```
 
-This requires `nodemon` to be installed (already in devDependencies).
-
-### Production Mode
-
+**Production Mode**:
 ```bash
 npm start
 ```
 
-The server will start on `http://localhost:5000` (or the port specified in `.env`).
+Server starts on: `http://localhost:5000`
 
-## API Endpoints
+### Verify Installation
+```bash
+# Test API health
+curl http://localhost:5000/api/health
 
-### Authentication
+# Expected response:
+# {"status": "OK", "message": "Server is running"}
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|----------------|
-| POST | `/api/auth/register` | Register a new user | No |
-| POST | `/api/auth/login` | User login | No |
-| GET | `/api/auth/me` | Get current user profile | Yes |
-| GET | `/api/auth/logout` | User logout | No |
-| PUT | `/api/auth/update-profile` | Update user profile | Yes |
-| PUT | `/api/auth/change-password` | Change password | Yes |
+## API Documentation
 
-### Holdings (Portfolio Management)
+### Base URL
+```
+https://api.portfoliotrack.sahilfolio.live/api
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|----------------|
-| POST | `/api/holdings` | Add new holding | Yes |
-| GET | `/api/holdings` | Get all holdings with P&L | Yes |
-| GET | `/api/holdings/:id` | Get single holding | Yes |
-| PUT | `/api/holdings/:id` | Update holding | Yes |
-| DELETE | `/api/holdings/:id` | Delete holding | Yes |
+### Request Headers
+All requests should include:
+```
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>  (for protected endpoints)
+```
 
-### Transactions
+### Response Format
+All responses follow a standard format:
+```json
+{
+  "success": true,
+  "message": "Optional message",
+  "data": {}
+}
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|----------------|
-| GET | `/api/transactions` | Get all transactions | Yes |
-| GET | `/api/transactions/:id` | Get single transaction | Yes |
-| GET | `/api/transactions/summary` | Get transaction statistics | Yes |
+Error responses:
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "statusCode": 400
+}
+```
 
-### Dashboard & Analytics
+### Authentication Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|----------------|
-| GET | `/api/dashboard/summary` | Get portfolio summary | Yes |
-| GET | `/api/dashboard/distribution` | Get portfolio distribution | Yes |
-| GET | `/api/dashboard/performance` | Get portfolio performance | Yes |
-
-## API Examples
-
-### Register User
+#### POST `/auth/register` - Register New User
+Register a new user account.
 
 **Request:**
-```bash
-POST /api/auth/register
-Content-Type: application/json
-
+```json
 {
   "name": "John Doe",
   "email": "john@example.com",
@@ -176,70 +280,130 @@ Content-Type: application/json
 }
 ```
 
-**Response:**
+**Response (201 Created):**
 ```json
 {
   "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "User registered successfully",
   "data": {
     "user": {
       "_id": "507f1f77bcf86cd799439011",
       "name": "John Doe",
       "email": "john@example.com",
-      "createdAt": "2024-01-15T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
+      "createdAt": "2024-11-25T10:30:00Z",
+      "updatedAt": "2024-11-25T10:30:00Z"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
 }
 ```
 
-### Login User
+#### POST `/auth/login` - User Login
+Authenticate user and get JWT token.
 
 **Request:**
-```bash
-POST /api/auth/login
-Content-Type: application/json
-
+```json
 {
   "email": "john@example.com",
   "password": "Password123!"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "Logged in successfully",
+  "data": {
+    "user": {
+      "_id": "507f1f77bcf86cd799439011",
+      "name": "John Doe",
+      "email": "john@example.com"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+#### GET `/auth/me` - Get Current User
+Requires authentication.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
   "data": {
     "user": {
       "_id": "507f1f77bcf86cd799439011",
       "name": "John Doe",
       "email": "john@example.com",
-      "createdAt": "2024-01-15T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
+      "createdAt": "2024-11-25T10:30:00Z",
+      "updatedAt": "2024-11-25T10:30:00Z"
     }
   }
 }
 ```
 
-### Add Holding
+#### PUT `/auth/update-profile` - Update Profile
+Update user information. Requires authentication.
 
 **Request:**
-```bash
-POST /api/holdings
-Authorization: Bearer <token>
-Content-Type: application/json
-
+```json
 {
-  "symbol": "AAPL",
-  "purchasePrice": 2500,
-  "quantity": 10,
-  "purchaseDate": "2024-01-10"
+  "name": "Jane Doe"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "user": {
+      "_id": "507f1f77bcf86cd799439011",
+      "name": "Jane Doe",
+      "email": "john@example.com"
+    }
+  }
+}
+```
+
+#### PUT `/auth/change-password` - Change Password
+Change user password. Requires authentication.
+
+**Request:**
+```json
+{
+  "currentPassword": "OldPassword123!",
+  "newPassword": "NewPassword456!"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+### Holdings Endpoints
+
+#### POST `/holdings` - Add New Holding
+Add a new stock holding to portfolio.
+
+**Request:**
+```json
+{
+  "symbol": "AAPL",
+  "purchasePrice": 150,
+  "quantity": 10,
+  "purchaseDate": "2024-11-20"
+}
+```
+
+**Response (201 Created):**
 ```json
 {
   "success": true,
@@ -249,25 +413,20 @@ Content-Type: application/json
       "_id": "507f1f77bcf86cd799439012",
       "userId": "507f1f77bcf86cd799439011",
       "symbol": "AAPL",
-      "purchasePrice": 2500,
+      "purchasePrice": 150,
       "quantity": 10,
-      "purchaseDate": "2024-01-10T00:00:00Z",
-      "createdAt": "2024-01-15T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
+      "purchaseDate": "2024-11-20T00:00:00Z",
+      "createdAt": "2024-11-25T10:30:00Z",
+      "updatedAt": "2024-11-25T10:30:00Z"
     }
   }
 }
 ```
 
-### Get All Holdings with P&L
+#### GET `/holdings` - Get All Holdings
+Get all holdings with real-time prices and P&L calculations.
 
-**Request:**
-```bash
-GET /api/holdings
-Authorization: Bearer <token>
-```
-
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -275,189 +434,426 @@ Authorization: Bearer <token>
     "holdings": [
       {
         "_id": "507f1f77bcf86cd799439012",
-        "userId": "507f1f77bcf86cd799439011",
         "symbol": "AAPL",
-        "purchasePrice": 2500,
+        "purchasePrice": 150,
         "quantity": 10,
-        "purchaseDate": "2024-01-10T00:00:00Z",
-        "currentPrice": 2750,
-        "investedAmount": 25000,
-        "currentHoldingValue": 27500,
-        "profitLoss": 2500,
-        "profitLossPercentage": 10.0,
-        "createdAt": "2024-01-15T10:30:00Z",
-        "updatedAt": "2024-01-15T10:30:00Z"
+        "currentPrice": 169,
+        "investedAmount": 1500,
+        "currentHoldingValue": 1690,
+        "profitLoss": 190,
+        "profitLossPercentage": 12.67,
+        "purchaseDate": "2024-11-20T00:00:00Z"
       }
     ],
     "summary": {
-      "totalInvested": 25000,
-      "currentValue": 27500,
-      "totalProfitLoss": 2500,
-      "totalProfitLossPercentage": 10.0,
+      "totalInvested": 1500,
+      "currentValue": 1690,
+      "totalProfitLoss": 190,
+      "totalProfitLossPercentage": 12.67,
       "numberOfHoldings": 1
     }
   }
 }
 ```
 
-### Get Dashboard Summary
+#### GET `/holdings/:id` - Get Single Holding
+Get detailed information about one holding.
 
-**Request:**
-```bash
-GET /api/dashboard/summary
-Authorization: Bearer <token>
-```
-
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "data": {
-    "summary": {
-      "totalInvested": 75000,
-      "currentPortfolioValue": 82500,
-      "totalProfitLoss": 7500,
-      "totalProfitLossPercentage": 10.0,
-      "numberOfHoldings": 3
-    },
-    "bestPerformer": {
-      "symbol": "TSLA",
-      "profitLossPercentage": 15.5,
-      "profitLoss": 3100
-    },
-    "worstPerformer": {
-      "symbol": "NVDA",
-      "profitLossPercentage": -5.2,
-      "profitLoss": -1040
-    },
-    "topHoldings": [
+    "holding": {
+      "_id": "507f1f77bcf86cd799439012",
+      "symbol": "AAPL",
+      "purchasePrice": 150,
+      "quantity": 10,
+      "currentPrice": 169,
+      "investedAmount": 1500,
+      "currentHoldingValue": 1690,
+      "profitLoss": 190,
+      "profitLossPercentage": 12.67
+    }
+  }
+}
+```
+
+#### PUT `/holdings/:id` - Update Holding
+Update quantity or purchase price of a holding.
+
+**Request:**
+```json
+{
+  "quantity": 15,
+  "purchasePrice": 150
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Holding updated successfully",
+  "data": {
+    "holding": {
+      "_id": "507f1f77bcf86cd799439012",
+      "symbol": "AAPL",
+      "quantity": 15,
+      "purchasePrice": 150
+    }
+  }
+}
+```
+
+#### DELETE `/holdings/:id` - Delete Holding
+Delete a holding (creates automatic SELL transaction at current price).
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Holding deleted successfully"
+}
+```
+
+### Transactions Endpoints
+
+#### GET `/transactions` - Get All Transactions
+Get all transactions with optional filtering.
+
+**Query Parameters:**
+- `symbol` - Filter by stock symbol (optional)
+- `type` - Filter by BUY/SELL (optional)
+- `sortBy` - Sort field (optional)
+- `page` - Pagination (optional)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "transactions": [
       {
+        "_id": "507f1f77bcf86cd799439013",
         "symbol": "AAPL",
-        "currentPrice": 2750,
+        "type": "BUY",
         "quantity": 10,
-        "investedAmount": 25000,
-        "currentHoldingValue": 27500,
-        "profitLoss": 2500,
-        "profitLossPercentage": 10.0,
-        "percentageOfPortfolio": 33.33
+        "pricePerShare": 150,
+        "totalValue": 1500,
+        "date": "2024-11-20T00:00:00Z"
       }
     ]
   }
 }
 ```
 
-## Authentication
+#### GET `/transactions/:id` - Get Single Transaction
+Get detailed information about one transaction.
 
-All protected endpoints require a JWT token in the `Authorization` header:
-
-```bash
-Authorization: Bearer <your_jwt_token>
-```
-
-The token is valid for 7 days by default and can be configured in the `.env` file.
-
-## Error Handling
-
-The API returns standardized error responses:
-
+**Response (200 OK):**
 ```json
 {
-  "success": false,
-  "message": "Error description"
+  "success": true,
+  "data": {
+    "transaction": {
+      "_id": "507f1f77bcf86cd799439013",
+      "symbol": "AAPL",
+      "type": "BUY",
+      "quantity": 10,
+      "pricePerShare": 150,
+      "totalValue": 1500,
+      "date": "2024-11-20T00:00:00Z"
+    }
+  }
 }
 ```
 
-Common HTTP status codes:
-- **200**: Success
-- **201**: Created
-- **400**: Bad Request (validation error)
-- **401**: Unauthorized (authentication required)
-- **404**: Not Found
-- **500**: Internal Server Error
+#### GET `/transactions/summary` - Get Transaction Summary
+Get aggregated transaction statistics.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalBought": 5000,
+      "totalSold": 1000,
+      "netInvestment": 4000,
+      "transactionCount": 5,
+      "perSymbol": {
+        "AAPL": {
+          "totalBought": 3000,
+          "totalSold": 500,
+          "netQuantity": 15
+        }
+      }
+    }
+  }
+}
+```
+
+### Dashboard Endpoints
+
+#### GET `/dashboard/summary` - Portfolio Summary
+Get portfolio overview with best/worst performers.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalInvested": 5000,
+      "currentPortfolioValue": 5500,
+      "totalProfitLoss": 500,
+      "totalProfitLossPercentage": 10.0,
+      "numberOfHoldings": 2
+    },
+    "bestPerformer": {
+      "symbol": "AAPL",
+      "profitLossPercentage": 12.67,
+      "profitLoss": 190
+    },
+    "worstPerformer": {
+      "symbol": "GOOGL",
+      "profitLossPercentage": 5.0,
+      "profitLoss": 100
+    },
+    "topHoldings": [...]
+  }
+}
+```
+
+#### GET `/dashboard/distribution` - Portfolio Distribution
+Get asset allocation data.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "distribution": [
+      {
+        "symbol": "AAPL",
+        "value": 1690,
+        "percentage": 30.91
+      },
+      {
+        "symbol": "GOOGL",
+        "value": 2100,
+        "percentage": 38.18
+      }
+    ]
+  }
+}
+```
+
+#### GET `/dashboard/performance` - Portfolio Performance
+Get historical portfolio performance data.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "performance": [
+      {
+        "date": "2024-11-20",
+        "value": 5000,
+        "profitLoss": 0
+      },
+      {
+        "date": "2024-11-25",
+        "value": 5500,
+        "profitLoss": 500
+      }
+    ]
+  }
+}
+```
 
 ## Database Schema
 
-### User
-- `_id`: ObjectId (Primary Key)
-- `name`: String
-- `email`: String (Unique)
-- `password`: String (Hashed)
-- `createdAt`: Date
-- `updatedAt`: Date
+### User Model
+```javascript
+{
+  _id: ObjectId,           // Primary key
+  name: String,            // User full name
+  email: String,           // Email (unique)
+  password: String,        // Hashed password
+  profilePicture: String,  // URL or base64
+  createdAt: Date,         // Account creation time
+  updatedAt: Date          // Last update time
+}
+```
 
-### Holding
-- `_id`: ObjectId (Primary Key)
-- `userId`: ObjectId (Foreign Key -> User)
-- `symbol`: String (Stock symbol)
-- `purchasePrice`: Number
-- `quantity`: Number
-- `purchaseDate`: Date
-- `createdAt`: Date
-- `updatedAt`: Date
+### Holding Model
+```javascript
+{
+  _id: ObjectId,           // Primary key
+  userId: ObjectId,        // Foreign key → User
+  symbol: String,          // Stock symbol (AAPL, GOOGL, etc)
+  purchasePrice: Number,   // Purchase price per share
+  quantity: Number,        // Number of shares
+  purchaseDate: Date,      // When purchased
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-### Transaction
-- `_id`: ObjectId (Primary Key)
-- `userId`: ObjectId (Foreign Key -> User)
-- `symbol`: String
-- `type`: String (Enum: "BUY", "SELL")
-- `quantity`: Number
-- `pricePerShare`: Number
-- `totalValue`: Number
-- `date`: Date
+### Transaction Model
+```javascript
+{
+  _id: ObjectId,           // Primary key
+  userId: ObjectId,        // Foreign key → User
+  symbol: String,          // Stock symbol
+  type: String,            // "BUY" or "SELL"
+  quantity: Number,        // Number of shares
+  pricePerShare: Number,   // Price per share
+  totalValue: Number,      // quantity × pricePerShare
+  date: Date,              // Transaction date
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-### PriceCache
-- `symbol`: String (Unique)
-- `price`: Number
-- `updatedAt`: Date (Auto-expires after 1 hour)
+### PriceCache Model
+```javascript
+{
+  symbol: String,          // Stock symbol (unique)
+  price: Number,           // Current price
+  updatedAt: Date          // Last fetched time
+}
+```
 
 ## Security Features
 
-1. **Password Hashing**: Passwords are hashed using bcryptjs with salt rounds of 10
-2. **JWT Authentication**: Secure token-based authentication
-3. **CORS**: Cross-origin requests controlled
-4. **Helmet**: HTTP headers security
-5. **Input Validation**: Server-side validation on all inputs
-6. **Data Isolation**: Each user can only access their own data
-7. **Environment Variables**: Sensitive configuration stored securely
+### ✅ Authentication & Authorization
+- **JWT Tokens** - Stateless authentication with 7-day expiry
+- **Password Hashing** - bcryptjs with 10 salt rounds
+- **Protected Routes** - All sensitive endpoints require authentication
+- **User Isolation** - Each user can only access their own data
+- **Token Validation** - Verified on every protected request
 
-## Performance Optimizations
+### ✅ Input Validation
+- **Email Validation** - Standard email format checking
+- **Password Requirements** - Minimum length and complexity
+- **Stock Symbol Validation** - Uppercase conversion and format checks
+- **Numeric Validation** - Price and quantity constraints
+- **Required Fields** - Mandatory field enforcement
 
-1. **Price Caching**: Stock prices are cached for 1 hour to reduce API calls
-2. **Database Indexes**: Indexes on frequently queried fields (userId, symbol, date)
-3. **Selective Queries**: Only fetch required fields
-4. **Batch API Calls**: Multiple stock prices fetched in one request where possible
+### ✅ Security Headers
+- **Helmet.js** - Sets security-related HTTP headers
+- **CORS** - Controlled cross-origin requests
+- **Rate Limiting** - Prevents API abuse (API request throttling)
+- **HTTPS** - All production traffic encrypted
 
-## Known Limitations & Future Improvements
+### ✅ Data Protection
+- **Password Encryption** - Never store plaintext passwords
+- **JWT Secret** - Strong, random secret key (min 32 chars)
+- **Environment Variables** - Sensitive data in .env, not in code
+- **MongoDB Indexes** - Optimized queries reduce exposure time
 
-1. **Stock Price Updates**: Currently fetches prices on-demand. Could implement WebSockets for real-time updates
-2. **Dividend Tracking**: Does not currently track dividend payments
-3. **Tax Calculations**: No built-in tax calculation features
-4. **Multiple Currencies**: Currently assumes INR only
-5. **Rate Limiting**: Could implement rate limiting for API endpoints
-6. **Testing**: Add comprehensive unit and integration tests
+### ✅ Best Practices
+- **Error Messages** - Generic messages hide implementation details
+- **Request Logging** - Morgan logs for audit trail
+- **SQL/NoSQL Injection** - Mongoose prevents injection
+- **XSS Protection** - JSON responses not HTML
+
+## Performance & Optimization
+
+### ✅ Price Caching Strategy
+- **2-Minute Cache** - Reduces API calls significantly
+- **In-Memory + DB Cache** - Fast retrieval with persistence
+- **Smart Throttling** - 1-second delay between API requests
+- **Rate Limit Handling** - Graceful degradation on API limit
+- **Fallback Pricing** - Uses cached price if API fails
+
+### ✅ Database Optimization
+- **Mongoose Indexing** - Fast queries on userId, symbol, date
+- **Selective Fields** - Only fetch required fields
+- **Query Optimization** - Lean queries where possible
+- **Connection Pooling** - MongoDB connection reuse
+
+### ✅ API Optimization
+- **Async/Await** - Non-blocking operations
+- **Parallel Requests** - Concurrent batch price fetching
+- **Response Compression** - Gzip compression enabled
+- **JSON Serialization** - Efficient data transfer
+
+### ✅ Code Quality
+- **Error Handling** - Graceful error recovery
+- **Logging** - Morgan HTTP logging
+- **Async Wrapper** - Centralized error catching
+- **Custom Middleware** - Reusable middleware components
+
+### Planned Features
+- [ ] **WebSocket Support** - Real-time price updates via WebSockets
+- [ ] **Dividend Tracking** - Record and track dividend income
+- [ ] **Tax Reports** - Generate capital gains reports
+- [ ] **Advanced Analytics** - Risk metrics, Sharpe ratio, etc.
+- [ ] **Multiple Currencies** - Support for different currencies
+- [ ] **Portfolio Alerts** - Price and portfolio change alerts
+- [ ] **Backup/Export** - Portfolio export to CSV/JSON
+- [ ] **API Rate Limiting** - Protect against abuse
+- [ ] **Webhook Support** - Webhooks for external integrations
+- [ ] **Batch Imports** - Bulk import transactions
+
+### Performance Improvements (Future)
+- Implement Redis caching for distributed systems
+- Add GraphQL API as alternative to REST
+- Implement request batching for frontend
+- Add API versioning for smooth transitions
 
 ## Deployment
 
-To deploy to production (e.g., Vercel, Heroku, Railway):
+### Prerequisites
+- Node.js v16+ installed
+- MongoDB Atlas account (cloud) or self-hosted MongoDB
+- TwelveData API key
+- Gmail account (for email service)
+- Firebase project (for Google OAuth)
 
-1. Set environment variables in the hosting platform
-2. Ensure MongoDB Atlas connection string is correct
-3. Change `JWT_SECRET` to a strong, random value
-4. Set `NODE_ENV=production`
-5. Update `FRONTEND_URL` to match your frontend domain
+### Deploy to Vercel
 
-## Troubleshooting
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Deploy to Vercel"
+   git push origin main
+   ```
 
-### MongoDB Connection Error
-- Verify MongoDB URI in `.env`
-- Check firewall/whitelist settings in MongoDB Atlas
-- Ensure connection string includes correct username and password
+2. **Create Vercel Project**
+   - Go to https://vercel.com
+   - Click "New Project"
+   - Select GitHub repository
+   - Import the project
 
-### API Key Errors (TwelveData)
-- Verify `TWELVEDATA_API_KEY` is correct
-- Check API key has sufficient quota
-- Ensure stock symbol is valid (e.g., AAPL, GOOGL, META)
+3. **Set Environment Variables**
+   - Go to Settings → Environment Variables
+   - Add all `.env` variables from your local setup
+   - Critical variables:
+     - MONGODB_URI
+     - JWT_SECRET
+     - TWELVEDATA_API_KEY
+     - FIREBASE_* variables
+     - EMAIL_*  variables
 
-### CORS Errors
-- Update `FRONTEND_URL` in `.env` to match your frontend domain
-- Ensure frontend sends proper `Authorization` headers
+4. **Deploy**
+   - Vercel auto-detects Node.js
+   - Builds and deploys automatically
+
+### Production Checklist
+- [ ] Set `NODE_ENV=production`
+- [ ] Change `JWT_SECRET` to strong random value (32+ chars)
+- [ ] Use strong MongoDB password
+- [ ] Enable HTTPS/SSL
+- [ ] Setup environment variables in hosting platform
+- [ ] Test all API endpoints in production
+- [ ] Monitor server logs and errors
+- [ ] Configure CORS for production domain
+- [ ] Enable API rate limiting
+- [ ] Setup database backups
+- [ ] Configure monitoring and alerts

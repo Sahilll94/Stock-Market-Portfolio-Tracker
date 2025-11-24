@@ -1,259 +1,562 @@
 # Stock Portfolio Tracker - Frontend
 
-A modern React + Vite application for tracking stock portfolio with real-time price updates.
+A modern React + Vite application for tracking stock portfolio with real-time price updates and comprehensive portfolio analytics.
 
 ## Tech Stack
 
-- **React 18** - UI library
-- **Vite** - Build tool & dev server (SWC compiler)
-- **React Router v6** - Client-side routing
-- **Zustand** - State management
-- **Axios** - HTTP client with JWT interceptors
-- **React Hook Form** - Form handling & validation
-- **Tailwind CSS** - Utility-first CSS framework
-- **Recharts** - Charts & data visualization
-- **Heroicons** - SVG icons
-- **React Hot Toast** - Toast notifications
-- **Date-fns** - Date formatting utilities
+- **React 18** - UI library with hooks
+- **Vite** - Build tool & dev server (lightning-fast HMR)
+- **React Router v6** - Client-side routing with protected routes
+- **Zustand** - State management for auth & app state
+- **Axios** - HTTP client with JWT interceptors & error handling
+- **React Hook Form** - Form handling & validation with real-time feedback
+- **Tailwind CSS** - Utility-first CSS framework with dark mode support
+- **Recharts** - Interactive charts & data visualization
+- **Heroicons** - Premium SVG icons
+- **React Hot Toast** - Toast notifications for user feedback
+- **Date-fns** - Date formatting & manipulation utilities
+- **SWC** - Fast JavaScript compiler for Vite
 
 ## Project Structure
 
 ```
 src/
-├── components/          # React components
-│   ├── Auth/           # Authentication forms (Login, Register)
-│   ├── Dashboard/      # Dashboard charts & summary
-│   ├── Holdings/       # Portfolio holdings components
-│   ├── Transactions/   # Transaction history components
-│   ├── Layout/         # Navigation & layout wrappers
-│   └── Common/         # Shared components (spinners, empty states)
-├── pages/              # Page components (routes)
-├── services/           # API service layer
-├── stores/             # Zustand state management
-├── hooks/              # Custom React hooks
-├── routes/             # Routing configuration
-├── utils/              # Utilities (formatters, validators, helpers)
-├── styles/             # Global CSS & Tailwind config
-├── App.jsx            # Root component
-└── main.jsx           # Entry point
+├── components/
+│   ├── Auth/               # Authentication components
+│   │   ├── LoginForm.jsx  # Email/Password login
+│   │   ├── RegisterForm.jsx # User registration
+│   │   └── GoogleOAuth.jsx # Google OAuth integration
+│   ├── Dashboard/         # Dashboard & analytics
+│   │   ├── DashboardSummary.jsx
+│   │   ├── PortfolioDistributionChart.jsx
+│   │   ├── PerformanceChart.jsx
+│   │   └── TopHoldingsCard.jsx
+│   ├── Holdings/          # Portfolio holdings
+│   │   ├── HoldingsList.jsx
+│   │   ├── HoldingsTable.jsx
+│   │   ├── AddHoldingForm.jsx
+│   │   ├── EditHoldingForm.jsx
+│   │   └── HoldingCard.jsx
+│   ├── Transactions/      # Transaction history
+│   │   ├── TransactionsList.jsx
+│   │   ├── TransactionsTable.jsx
+│   │   ├── AddTransactionForm.jsx
+│   │   └── TransactionFilters.jsx
+│   ├── Layout/            # Layout components
+│   │   ├── Navbar.jsx     # Navigation header
+│   │   ├── Sidebar.jsx    # Side navigation
+│   │   ├── MainLayout.jsx # Protected page wrapper
+│   │   └── Footer.jsx     # Footer
+│   └── Common/            # Shared components
+│       ├── LoadingSpinner.jsx
+│       ├── EmptyState.jsx
+│       ├── ConfirmDialog.jsx
+│       ├── Modal.jsx
+│       └── ErrorBoundary.jsx
+├── pages/
+│   ├── LandingPage.jsx    # Public landing page
+│   ├── LoginPage.jsx      # Sign in page
+│   ├── RegisterPage.jsx   # Sign up page
+│   ├── DashboardPage.jsx  # Portfolio overview
+│   ├── HoldingsPage.jsx   # Holdings management
+│   ├── TransactionsPage.jsx # Transaction history
+│   ├── HowItWorksPage.jsx # Feature guide
+│   ├── TermsPage.jsx      # Terms & conditions
+│   └── NotFoundPage.jsx   # 404 page
+├── services/
+│   ├── api.js             # Axios instance with interceptors
+│   ├── authService.js     # Authentication API calls
+│   ├── holdingsService.js # Holdings CRUD operations
+│   ├── transactionsService.js # Transaction API calls
+│   └── dashboardService.js # Dashboard data fetching
+├── stores/
+│   ├── authStore.js       # Zustand auth state
+│   ├── holdingsStore.js   # Holdings state
+│   ├── transactionsStore.js # Transactions state
+│   └── appStore.js        # General app state (theme, loading)
+├── hooks/
+│   ├── useAuth.js         # Authentication hook
+│   ├── useHoldings.js     # Holdings management hook
+│   ├── useTransactions.js # Transactions hook
+│   ├── useDashboard.js    # Dashboard data hook
+│   └── useLocalStorage.js # Local storage utilities
+├── routes/
+│   ├── ProtectedRoute.jsx # Route protection wrapper
+│   ├── index.js           # Route configuration
+│   └── navigation.js      # Navigation structure
+├── utils/
+│   ├── formatters.js      # Currency, date, percentage formatting
+│   ├── validators.js      # Form validation rules
+│   ├── calculations.js    # Financial calculations (P&L, etc)
+│   ├── constants.js       # App constants & config
+│   └── helpers.js         # General utilities
+├── styles/
+│   ├── index.css          # Global styles
+│   ├── tailwind.css       # Tailwind directives
+│   └── custom.css         # Custom component styles
+├── contexts/
+│   └── ThemeContext.jsx   # Dark/Light theme context
+├── assets/
+│   ├── images/            # Images & icons
+│   ├── logos/             # Logo variants
+│   └── illustrations/     # SVG illustrations
+├── config/
+│   ├── routes.js          # Route paths configuration
+│   └── colors.js          # Color scheme constants
+├── App.jsx                # Root component with routing
+└── main.jsx               # Application entry point
 ```
 
 ## Installation & Setup
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### Prerequisites
+- Node.js 16+ and npm 8+
+- Backend API running (see backend README)
+- Modern web browser
 
-2. **Environment configuration**
-   Create `.env` file:
-   ```
-   VITE_API_URL=https://api.stocks.sahilfolio.live/api
-   ```
+### 1. Install Dependencies
+```bash
+cd frontend
+npm install
+```
 
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
-   Opens automatically at `http://localhost:3000`
+### 2. Environment Configuration
+Create `.env` file in the frontend directory:
 
-4. **Build for production**
-   ```bash
-   npm run build
-   ```
+```env
+VITE_API_URL=https://api.portfoliotrack.sahilfolio.live/api
 
-5. **Preview production build**
-   ```bash
-   npm run preview
-   ```
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=tour_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebsae_app_id
+```
+
+> **NOTE**: We can change the `VITE_API_URL` if we are also hosting the backend directory on the local machine where we can keep `VITE_API_URL`:`http://localhost:5000/api`
+
+### 3. Start Development Server
+```bash
+npm run dev
+```
+- Opens automatically at `http://localhost:5173`
+- Hot reload enabled for instant feedback
 
 ## Features Implemented
 
-### ✅ Authentication
-- **Register Page** - Sign up with email/password
-- **Login Page** - Sign in with remember me option
+### Authentication System
+- **Email/Password Registration** - Secure signup with validation
+- **Email/Password Login** - Standard authentication with remember me
+- **Google OAuth** - One-click Google Sign-In integration
+- **JWT Token Management** - Automatic token refresh & injection
 - **Protected Routes** - Automatic redirects for unauthenticated users
-- **JWT Token Management** - Automatic token injection in API calls
+- **Session Persistence** - Tokens stored securely in localStorage
+- **Password Reset** - Email-based password recovery with OTP
+- **Two-Factor Authentication** - Optional OTP verification
 
-### ✅ Dashboard
-- **Portfolio Summary Cards** - Total invested, current value, P&L, holdings count
-- **Portfolio Distribution Chart** - Pie chart showing allocation
-- **Performance Chart** - Line chart tracking value over time
-- **Refresh Data** - Manual refresh functionality
+### Dashboard & Analytics
+- **Portfolio Summary Cards** - Total invested, current value, P&L, gain %
+- **Portfolio Distribution Chart** - Interactive pie chart by allocation %
+- **Performance Chart** - Line chart showing portfolio growth over time
+- **Best/Worst Performers** - Top 3 gainers and losers
+- **Real-time Updates** - Data refreshes every 60 seconds
+- **Custom Date Ranges** - Filter performance by time periods
+- **Quick Stats** - Daily change, holdings count, asset breakdown
 
-### ✅ Holdings Management
-- **Holdings List** - Table/card view with sorting
-- **Add Holding** - Modal form to add new holdings
-- **Edit Holding** - Update quantity and price
-- **Delete Holding** - Remove holdings with confirmation
-- **P&L Calculation** - Real-time profit/loss display
+### Holdings Management
+- **Holdings List View** - Sortable table with key metrics
+- **Add Holdings** - Modal form with real-time validation
+- **Edit Holdings** - Update quantity and purchase price
+- **Delete Holdings** - With confirmation dialog
+- **Real-time P&L** - Automatic calculation with current prices
+- **Holdings Search** - Filter by symbol or company name
+- **Export Holdings** - Download portfolio as CSV
+- **Bulk Operations** - Multi-select delete functionality
 
-### ✅ Transaction History
-- **Transaction List** - Chronological transaction history
-- **Add Transaction** - Record buy/sell transactions
-- **Filter Transactions** - By symbol and type (buy/sell)
-- **Delete Transaction** - Remove transaction records
+### Transaction History
+- **Transaction List** - Chronological view with filtering
+- **Add Transactions** - Record buy/sell transactions
+- **Filter & Sort** - By symbol, type, date, and amount
+- **Delete Transactions** - Remove individual transactions
+- **Transaction Summary** - Total invested, gains, average cost
+- **Export History** - Download transactions as CSV
+- **Transaction Categories** - BUY, SELL, DIVIDEND types
 
-### ✅ Navigation & Layout
+### User Experience Features
 - **Navbar** - Navigation with user profile dropdown
-- **MainLayout** - Consistent layout wrapper for protected pages
-- **Mobile Responsive** - Works on mobile, tablet, and desktop
-- **Logout** - Secure logout functionality
+- **Mobile Responsive** - Works perfectly on all devices
+- **Dark Mode** - Toggle between light and dark themes
+- **Toast Notifications** - User feedback for actions
+- **Loading States** - Smooth loading indicators
+- **Error Handling** - User-friendly error messages
+- **Form Validation** - Real-time field validation
+- **Empty States** - Helpful guidance when no data
 
-## API Endpoints
+### Additional Pages
+- **Landing Page** - Public-facing home page with features
+- **How It Works** - Tutorial page with screenshots
+- **Terms & Conditions** - Legal documentation
+- **User Profile** - Profile view and settings
+- **404 Page** - Friendly not found page
 
-All endpoints require JWT token authentication (except auth endpoints).
+### Technical Features
+- **API Integration** - RESTful API with Axios
+- **State Management** - Zustand for global state
+- **Error Boundaries** - React error handling
+- **Performance Optimization** - Code splitting & lazy loading
+- **SEO Ready** - Meta tags and structured data
+- **Accessibility** - WCAG 2.1 compliance
+- **Security** - XSS protection, CSRF tokens
 
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login user
-- `GET /auth/me` - Get current user
-- `PUT /auth/update-profile` - Update profile
-- `PUT /auth/change-password` - Change password
+## API Endpoints Reference
 
-### Holdings
-- `GET /holdings` - Get all holdings
-- `POST /holdings` - Add new holding
-- `PUT /holdings/:id` - Update holding
-- `DELETE /holdings/:id` - Delete holding
+All endpoints require JWT authentication (except `/auth` endpoints). Base URL: `https://api.portfoliotrack.sahilfolio.live/api`
 
-### Transactions
-- `GET /transactions` - Get transactions (with filters)
-- `POST /transactions` - Add transaction
-- `DELETE /transactions/:id` - Delete transaction
+### Authentication Endpoints
+```
+POST   /auth/register           # Register new user
+POST   /auth/login              # Login with email/password
+POST   /auth/google             # Google OAuth login
+GET    /auth/me                 # Get current user profile
+PUT    /auth/update-profile     # Update user profile
+PUT    /auth/change-password    # Change password
+POST   /auth/forgot-password    # Request password reset
+POST   /auth/reset-password     # Reset password with token
+```
 
-### Dashboard
-- `GET /dashboard/summary` - Portfolio summary
-- `GET /dashboard/distribution` - Holdings distribution
-- `GET /dashboard/performance/:days` - Performance over time
+### Holdings Endpoints
+```
+GET    /holdings                # Get all user holdings
+POST   /holdings                # Add new holding
+GET    /holdings/:id            # Get specific holding
+PUT    /holdings/:id            # Update holding
+DELETE /holdings/:id            # Delete holding
+GET    /holdings/:id/chart      # Get holding performance chart
+```
 
-## Component Examples
+### Transactions Endpoints
+```
+GET    /transactions            # Get all transactions (with filters)
+POST   /transactions            # Add new transaction
+GET    /transactions/:id        # Get specific transaction
+DELETE /transactions/:id        # Delete transaction
+GET    /transactions/summary    # Get transaction summary stats
+```
 
-### Using Custom Hooks
+### Dashboard Endpoints
+```
+GET    /dashboard/summary       # Portfolio summary metrics
+GET    /dashboard/distribution  # Holdings distribution data
+GET    /dashboard/performance   # Portfolio performance over time
+GET    /dashboard/stats/:days   # Statistics for custom date range
+```
+
+## Component Examples & Usage
+
+### Using Authentication Hook
 ```jsx
 import { useAuth } from '../hooks/useAuth';
 
-function MyComponent() {
-  const { user, logout, token } = useAuth();
+function UserProfile() {
+  const { user, logout, token, isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) return null;
   
   return (
     <div>
-      <p>User: {user?.name}</p>
+      <p>Welcome, {user?.name}!</p>
+      <p>Email: {user?.email}</p>
       <button onClick={logout}>Logout</button>
     </div>
   );
 }
 ```
 
-### Using Services
+### Using Holdings Hook
+```jsx
+import { useHoldings } from '../hooks/useHoldings';
+
+function HoldingsList() {
+  const { holdings, loading, error, deleteHolding } = useHoldings();
+  
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage msg={error} />;
+  
+  return (
+    <div>
+      {holdings.map(holding => (
+        <HoldingCard 
+          key={holding._id} 
+          holding={holding}
+          onDelete={() => deleteHolding(holding._id)}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+### Using Dashboard Hook
+```jsx
+import { useDashboard } from '../hooks/useDashboard';
+
+function PortfolioSummary() {
+  const { summary, performance, distribution } = useDashboard();
+  
+  return (
+    <div>
+      <h2>Portfolio Value: ₹{summary?.currentValue}</h2>
+      <p>P&L: {summary?.profitLossPercentage}%</p>
+      <PerformanceChart data={performance} />
+      <DistributionChart data={distribution} />
+    </div>
+  );
+}
+```
+
+### Using API Service
 ```jsx
 import holdingsService from '../services/holdingsService';
 
-const response = await holdingsService.getAll();
-const holding = await holdingsService.create(data);
+async function addNewHolding() {
+  try {
+    const response = await holdingsService.create({
+      symbol: 'AAPL',
+      purchasePrice: 150,
+      quantity: 10,
+      purchaseDate: new Date()
+    });
+    toast.success('Holding added successfully!');
+  } catch (error) {
+    toast.error(error.message);
+  }
+}
 ```
 
 ### Using Zustand Store Directly
 ```jsx
 import { useAuthStore } from '../stores/authStore';
 
-const { user, token, logout } = useAuthStore();
+function Navbar() {
+  const { user, token, logout, setUser } = useAuthStore();
+  
+  return (
+    <nav>
+      {user && <span>{user.name}</span>}
+      <button onClick={logout}>Logout</button>
+    </nav>
+  );
+}
 ```
 
-## Styling
+### Form Validation Example
+```jsx
+import { useForm } from 'react-hook-form';
+import { validateEmail, validatePassword } from '../utils/validators';
+
+function LoginForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm();
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input 
+        {...register('email', { 
+          required: 'Email is required',
+          validate: validateEmail 
+        })} 
+      />
+      {errors.email && <span>{errors.email.message}</span>}
+      
+      <input 
+        {...register('password', { 
+          required: 'Password is required',
+          validate: validatePassword 
+        })} 
+        type="password"
+      />
+      {errors.password && <span>{errors.password.message}</span>}
+      
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+## Styling & Theming
 
 ### Tailwind CSS Custom Classes
 
 **Buttons:**
-- `.btn-primary` - Primary action button (sky blue)
-- `.btn-secondary` - Secondary action button (gray)
-- `.btn-danger` - Destructive action button (red)
-- `.btn-sm` - Small button variant
+```css
+.btn-primary      /* Sky blue primary action button */
+.btn-secondary    /* Gray secondary button */
+.btn-danger       /* Red destructive action button */
+.btn-success      /* Green success button */
+.btn-warning      /* Orange warning button */
+.btn-sm           /* Small button variant */
+.btn-lg           /* Large button variant */
+.btn-block        /* Full width button */
+```
 
 **Forms:**
-- `.input` - Input field styling
-- `.input-error` - Input with error state
-- `.label` - Form label
-- `.error-text` - Error message text
+```css
+.input            /* Standard input field styling */
+.input-error      /* Input with error state (red border) */
+.label            /* Form label styling */
+.error-text       /* Error message text (red) */
+.success-text     /* Success message text (green) */
+.input-group      /* Group related inputs */
+```
 
-**Cards:**
-- `.card` - Card container with shadow
-- `.card-hover` - Card with hover effect
+**Cards & Containers:**
+```css
+.card             /* Card container with shadow */
+.card-hover       /* Card with hover elevation effect */
+.card-primary     /* Card with primary background */
+.shadow-sm        /* Small shadow */
+.shadow-md        /* Medium shadow */
+.shadow-lg        /* Large shadow */
+```
+
+**Layout:**
+```css
+.container        /* Max-width container */
+.flex             /* Flexbox container */
+.grid             /* CSS Grid container */
+.gap-*            /* Spacing utilities */
+.p-*              /* Padding utilities */
+.m-*              /* Margin utilities */
+```
+
+### Dark Mode Support
+- **Theme Toggle** - Located in navbar/settings
+- **Persistent Theme** - Saved to localStorage
+- **System Preference** - Detects OS dark mode
+- **Smooth Transitions** - Animated theme changes
+
+```jsx
+// Using theme in components
+import { useTheme } from '../contexts/ThemeContext';
+
+function MyComponent() {
+  const { theme, toggleTheme } = useTheme();
+  
+  return (
+    <div className={theme === 'dark' ? 'bg-gray-900' : 'bg-white'}>
+      <button onClick={toggleTheme}>
+        Toggle {theme === 'dark' ? 'Light' : 'Dark'} Mode
+      </button>
+    </div>
+  );
+}
+```
 
 ## Environment Variables
 
 ```env
-VITE_API_URL=https://api.stocks.sahilfolio.live/api
+VITE_API_URL=https://api.portfoliotrack.sahilfolio.live/api
+
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=tour_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebsae_app_id
 ```
 
-## Testing the Application
+### User Flow Steps:
 
-1. **Register** - Create new account at `/register`
-2. **Login** - Sign in at `/login`
-3. **Dashboard** - View portfolio overview
-4. **Holdings** - Add/edit/delete stock holdings
-5. **Transactions** - Record and track transactions
-6. **Profile** - Access user settings (coming soon)
+1. **Register** 
+   - Go to `/register`
+   - Create account with email and password
+   - Or use Google OAuth for quick signup
 
-## Development Tips
+2. **Login**
+   - Go to `/login`
+   - Use credentials or Google OAuth
+   - Check "Remember me" for persistent login
 
-### Enable Redux DevTools (Optional)
-For debugging Zustand state, use browser DevTools with the Zustand middleware.
+3. **Dashboard**
+   - View portfolio overview
+   - See P&L calculations
+   - Check distribution chart
+   - View performance trends
 
-### API Request Interceptors
-Axios automatically:
-- Injects JWT token in Authorization header
-- Redirects to `/login` on 401 Unauthorized
-- Handles error responses
+4. **Add Holdings**
+   - Click "Add Holding" button
+   - Enter stock symbol (e.g., AAPL, GOOGL)
+   - Set purchase price and quantity
+   - Select purchase date
+   - Submit to add holding
 
-### Form Validation
-React Hook Form provides:
-- Real-time validation
-- Minimal re-renders
-- Custom validators (email, password, stock symbols)
+5. **Manage Holdings**
+   - Edit holdings to update quantity
+   - Delete holdings with confirmation
+   - View individual P&L for each stock
+
+6. **View Transactions**
+   - See complete transaction history
+   - Filter by symbol or type
+   - Download transaction history
+
+7. **User Settings**
+   - Toggle dark mode
+   - Update profile information
+   - Change password
+   - Logout
+
+## Performance Tips
+
+1. **Optimize Images**
+   - Vite automatically optimizes imported images
+   - Use appropriate image formats (WebP for modern browsers)
+
+2. **Code Splitting**
+   - React Router enables automatic route-based code splitting
+   - Chunks loaded on demand for better performance
+
+3. **Lazy Loading**
+   - Components are lazy loaded for faster initial load
+   - Charts and large components load asynchronously
+
+4. **API Caching**
+   - Holdings and transactions cached on client
+   - Reduce unnecessary API calls
+   - Manual refresh available when needed
+
+5. **State Management**
+   - Zustand provides minimal bundle size overhead
+   - Selective updates prevent unnecessary re-renders
 
 ## Deployment
 
-### Deploy to Vercel
-1. Connect GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard:
-   ```
-   VITE_API_URL=https://api.stocks.sahilfolio.live/api
-   ```
-3. Vercel auto-detects Vite and builds accordingly
+### Deploy to Vercel (Recommended)
 
-### Deploy to Netlify
-1. Build locally: `npm run build`
-2. Deploy `dist` folder
-3. Set environment variables in Netlify dashboard
+1. **Connect GitHub Repository**
+   - Push code to GitHub
+   - Go to https://vercel.com
+   - Click "New Project"
+   - Select your repository
 
-## Troubleshooting
+2. **Configure Environment**
+   - Set `VITE_API_URL` in Vercel dashboard
+   - Value: `https://api.portfoliotrack.sahilfolio.live/api`
 
-### API Connection Issues
-- Check `VITE_API_URL` in `.env`
-- Verify backend is running at the API URL
-- Check browser console for CORS errors
+3. **Deploy**
+   - Vercel auto-detects Vite framework
+   - Builds and deploys automatically
+   - Custom domain support available
 
-### Authentication Not Working
-- Clear localStorage and cookies
-- Check JWT token in local storage
-- Verify backend JWT secret matches
+## Project Links
 
-### Chart Not Displaying
-- Ensure Recharts is installed: `npm list recharts`
-- Check data format matches expected structure
-- Verify API returns correct data
+- **Repository**: https://github.com/Sahilll94/Stock-Market-Portfolio-Tracker
+- **Backend API**: https://api.portfoliotrack.sahilfolio.live/api
+- **Live Demo**: https://portfoliotrack.sahilfolio.live
 
-## Next Steps
+---
 
-- [ ] User profile page
-- [ ] Password reset functionality
-- [ ] Stock price alerts
-- [ ] Export portfolio to CSV
-- [ ] Advanced analytics and reports
-- [ ] Mobile app with React Native
-- [ ] Dark mode support
-
-## Support
-
-For issues or questions, check the backend API documentation at the API URL or contact support.
+**Last Updated**: November 2024  
+**Version**: 1.0.0  

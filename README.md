@@ -562,16 +562,15 @@ Visual representation of portfolio performance over time with trend analysis.
 
 A comprehensive video walkthrough demonstrating the application features and technical implementation is available at:
 
-[YouTube Link - Video will be uploaded and link added here]
+[![Watch the video](https://img.youtube.com/vi/-ShunyZFysU/maxresdefault.jpg)](https://www.youtube.com/watch?v=-ShunyZFysU)
 
-The video walkthrough (3-5 minutes) includes:
+The video walkthrough (12-13 minutes) includes:
 - Application overview and key features
 - User registration and login process
 - Portfolio management workflows
 - Dashboard analytics and visualization
 - Transaction history and filtering
 - Theme toggle and responsive design
-- Technical architecture explanation
 
 ## Development and Deployment
 
@@ -592,6 +591,6 @@ For technical inquiries or issues, please refer to the detailed code documentati
 
 ---
 
-**Latest Update:** November 2025 | 21:16
-**Version:** 1.0.3
+**Latest Update:** November 2025 | 02:03
+**Version:** 1.0.4
 **Repository:** https://github.com/Sahilll94/Stock-Market-Portfolio-Tracker
