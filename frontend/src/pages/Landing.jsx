@@ -5,6 +5,7 @@ import {
   LineChart, PieChart, Gauge, DollarSign, Award, Rocket, Github
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
 import { useState, useEffect } from 'react';
 import stockService from '../services/stockService';
 
@@ -19,6 +20,7 @@ const defaultPortfolioData = {
 export default function Landing() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const { isAuthenticated } = useAuth();
   const [hoveredFeature, setHoveredFeature] = useState(null);
   const [portfolioData, setPortfolioData] = useState(defaultPortfolioData);
   const [loading, setLoading] = useState(true);
@@ -155,27 +157,29 @@ export default function Landing() {
               </button>
 
               {/* Sign In Button */}
-              <button
-                onClick={() => navigate('/login')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-300 hidden sm:block ${
-                  isDark
-                    ? 'text-gray-400 hover:text-white hover:bg-gray-800/50 active:scale-95'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:scale-95'
-                }`}
-              >
-                Sign In
-              </button>
+              {!isAuthenticated ? (
+                <button
+                  onClick={() => navigate('/login')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-300 hidden sm:block ${
+                    isDark
+                      ? 'text-gray-400 hover:text-white hover:bg-gray-800/50 active:scale-95'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:scale-95'
+                  }`}
+                >
+                  Sign In
+                </button>
+              ) : null}
 
-              {/* Get Started Button */}
+              {/* Get Started / Dashboard Button */}
               <button
-                onClick={() => navigate('/register')}
+                onClick={() => navigate(isAuthenticated ? '/dashboard' : '/register')}
                 className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-all duration-300 active:scale-95 ${
                   isDark
                     ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/50'
                     : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30'
                 }`}
               >
-                Get Started
+                {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
               </button>
             </div>
           </div>
@@ -228,33 +232,52 @@ export default function Landing() {
             </div>
 
             <div className="flex flex-col xs:flex-row gap-3 pt-8">
-              <button
-                onClick={() => navigate('/register')}
-                className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative overflow-hidden ${
-                  isDark
-                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
-                    : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
-                }`}
-              >
-                <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${isDark ? 'bg-white' : 'bg-white'}`}></div>
-                <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
-                  <Rocket size={18} className="transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-12" />
-                  <span>Start Tracking</span>
-                </span>
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative ${
-                  isDark
-                    ? 'border-2 border-blue-500/50 bg-blue-500/10 text-white hover:border-blue-400 hover:bg-blue-500/20 active:scale-95 hover:shadow-lg hover:shadow-blue-500/30'
-                    : 'border-2 border-blue-600/50 bg-blue-600/10 text-blue-700 hover:border-blue-600 hover:bg-blue-600/20 active:scale-95 hover:shadow-lg hover:shadow-blue-600/30'
-                }`}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
-                  <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
-                  <span>Sign In</span>
-                </span>
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                    isDark
+                      ? 'bg-gradient-to-br from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-green-600/40'
+                      : 'bg-gradient-to-br from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-green-600/40'
+                  }`}
+                >
+                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${isDark ? 'bg-white' : 'bg-white'}`}></div>
+                  <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
+                    <BarChart3 size={18} className="transition-transform duration-300 group-hover:scale-125" />
+                    <span>View Your Portfolio</span>
+                  </span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                      isDark
+                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
+                        : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
+                    }`}
+                  >
+                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${isDark ? 'bg-white' : 'bg-white'}`}></div>
+                    <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
+                      <Rocket size={18} className="transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-12" />
+                      <span>Start Tracking</span>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative ${
+                      isDark
+                        ? 'border-2 border-blue-500/50 bg-blue-500/10 text-white hover:border-blue-400 hover:bg-blue-500/20 active:scale-95 hover:shadow-lg hover:shadow-blue-500/30'
+                        : 'border-2 border-blue-600/50 bg-blue-600/10 text-blue-700 hover:border-blue-600 hover:bg-blue-600/20 active:scale-95 hover:shadow-lg hover:shadow-blue-600/30'
+                    }`}
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
+                      <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                      <span>Sign In</span>
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Trust Indicators */}
@@ -532,42 +555,70 @@ export default function Landing() {
       {/* Final CTA */}
       <section className={`py-16 sm:py-24 lg:py-32 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8 text-center">
-          <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Start Tracking Today
-          </h2>
-          <p className={`text-base mb-8 max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Simple, free, and ready to use. No credit card required.
-          </p>
-          
-          <div className="flex flex-col xs:flex-row gap-3 justify-center">
-            <button
-              onClick={() => navigate('/register')}
-              className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative overflow-hidden ${
-                isDark
-                  ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
-                  : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
-              }`}
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-white"></div>
-              <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
-                <Rocket size={18} className="transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-12" />
-                Get Started Free
-              </span>
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative ${
-                isDark
-                  ? 'border-2 border-blue-500/50 bg-blue-500/10 text-white hover:border-blue-400 hover:bg-blue-500/20 active:scale-95 hover:shadow-lg hover:shadow-blue-500/30'
-                  : 'border-2 border-blue-600/50 bg-blue-600/10 text-blue-700 hover:border-blue-600 hover:bg-blue-600/20 active:scale-95 hover:shadow-lg hover:shadow-blue-600/30'
-              }`}
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
-                <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
-                Sign In
-              </span>
-            </button>
-          </div>
+          {isAuthenticated ? (
+            <>
+              <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Welcome Back!
+              </h2>
+              <p className={`text-base mb-8 max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Ready to check your portfolio? Head to your dashboard and keep tracking your investments.
+              </p>
+              
+              <button
+                onClick={() => navigate('/dashboard')}
+                className={`px-8 py-4 text-base font-semibold rounded-xl transition-all duration-300 group relative overflow-hidden inline-block ${
+                  isDark
+                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-green-600/40'
+                    : 'bg-gradient-to-br from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-green-600/40'
+                }`}
+              >
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-white`}></div>
+                <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
+                  <BarChart3 size={20} className="transition-transform duration-300 group-hover:scale-125" />
+                  <span>Go to Dashboard</span>
+                </span>
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Start Tracking Today
+              </h2>
+              <p className={`text-base mb-8 max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Simple, free, and ready to use. No credit card required.
+              </p>
+              
+              <div className="flex flex-col xs:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => navigate('/register')}
+                  className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                    isDark
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
+                      : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-blue-600/40'
+                  }`}
+                >
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-white"></div>
+                  <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
+                    <Rocket size={18} className="transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-12" />
+                    Get Started Free
+                  </span>
+                </button>
+                <button
+                  onClick={() => navigate('/login')}
+                  className={`px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 group relative ${
+                    isDark
+                      ? 'border-2 border-blue-500/50 bg-blue-500/10 text-white hover:border-blue-400 hover:bg-blue-500/20 active:scale-95 hover:shadow-lg hover:shadow-blue-500/30'
+                      : 'border-2 border-blue-600/50 bg-blue-600/10 text-blue-700 hover:border-blue-600 hover:bg-blue-600/20 active:scale-95 hover:shadow-lg hover:shadow-blue-600/30'
+                  }`}
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2 group-hover:gap-3 transition-all duration-300">
+                    <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                    Sign In
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
