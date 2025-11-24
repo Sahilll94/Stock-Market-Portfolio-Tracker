@@ -38,15 +38,23 @@ export default function Navbar() {
         <div className="flex justify-between h-14 items-center">
           {/* Logo */}
           <div className="flex items-center">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center space-x-2 transition-all duration-300 hover:scale-105 active:scale-95 group"
-            >
-              <div className={`p-1.5 rounded-lg transition-all duration-300 ${isDark ? 'bg-blue-600/20 group-hover:bg-blue-600/30' : 'bg-blue-600/10 group-hover:bg-blue-600/20'}`}>
-                <img src="/portfolioTrack-logo.png" alt="PortfolioTrack Logo" className="w-5 h-5 transition-all group-hover:scale-110" />
-              </div>
-              <span className={`font-semibold transition-colors duration-300 ${isDark ? 'text-white group-hover:text-blue-400' : 'text-gray-900 group-hover:text-blue-600'}`}>PortfolioTrack</span>
-            </button>
+          <a
+            href="https://portfoliotrack.sahilfolio.live/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 transition-all duration-300 hover:scale-105 active:scale-95 group"
+          >
+            <div className={`p-1.5 rounded-lg transition-all duration-300 ${isDark ? 'bg-blue-600/20 group-hover:bg-blue-600/30' : 'bg-blue-600/10 group-hover:bg-blue-600/20'}`}>
+              <img
+                src="/portfolioTrack-logo.png"
+                alt="PortfolioTrack Logo"
+                className="w-5 h-5 transition-all group-hover:scale-110"
+              />
+            </div>
+            <span className={`font-semibold transition-colors duration-300 ${isDark ? 'text-white group-hover:text-blue-400' : 'text-gray-900 group-hover:text-blue-600'}`}>
+              PortfolioTrack
+            </span>
+          </a>
           </div>
 
           {/* Desktop Navigation */}
