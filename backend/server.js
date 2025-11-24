@@ -50,6 +50,18 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/stocks', stockRoutes);
 
+// Root endpoint with API info
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'PortfolioTrack Backend API is running',
+    'frontend-url': 'https://portfoliotrack.sahilfolio.live',
+    docs: 'https://www.postman.com/sahillll94/workspace/portfolio-tracker/collection/36283559-aad8529b-5ff9-4b2c-a785-533e5f464107?action=share&creator=36283559&active-environment=36283559-334dc1ba-8b38-47f4-ba47-3bebf0d78a98',
+    'GitHub-Repository': 'https://github.com/Sahilll94/Stock-Market-Portfolio-Tracker',
+    'contact-on-email': 'sahilk64555@gmail.com'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
