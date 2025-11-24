@@ -285,9 +285,9 @@ npm run preview
 ## API Documentation
 
 > You can explore and test all API endpoints using the following Postman Collection:  
-> **[Postman Collection](https://www.postman.com/sahillll94/workspace/portfolio-tracker/collection/36283559-aad8529b-5ff9-4b2c-a785-533e5f464107?action=share&creator=36283559&active-environment=36283559-7bef07fd-160a-49e8-8822-f77d1111269b)**
+> **[Postman Collection](https://www.postman.com/sahillll94/workspace/portfolio-tracker/collection/36283559-aad8529b-5ff9-4b2c-a785-533e5f464107?action=share&creator=36283559&active-environment=36283559-334dc1ba-8b38-47f4-ba47-3bebf0d78a98)**
 
-> **Note:** Set the `base_url` to: `http://api.portfoliotrack.sahilfolio.live/`
+> **Note:** Set the `base_url` to: `http://api.portfoliotrack.sahilfolio.live`
 
 
 ### Authentication Endpoints
