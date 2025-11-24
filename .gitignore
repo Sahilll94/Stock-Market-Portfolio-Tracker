@@ -44,3 +44,6 @@ docker-secrets/
 mongodb_data/
 mongodb_config/
 dump/
+
+DEMO_GUIDE.md
+

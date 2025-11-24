@@ -1,16 +1,19 @@
 import axios from 'axios';
-import PriceCache from '../models/PriceCache.js';
 import AppError from '../utils/AppError.js';
+import PriceCache from '../models/PriceCache.js';
 
 class StockPriceService {
   constructor() {
     this.apiKey = process.env.TWELVEDATA_API_KEY;
     this.baseURL = process.env.TWELVEDATA_BASE_URL || 'https://api.twelvedata.com';
-    this.cacheExpireTime = 60 * 60 * 1000; // 1 hour in milliseconds
+    this.priceCache = new Map(); // In-memory cache for speed
+    this.cacheDuration = 2 * 60 * 1000; // 2 minutes - longer cache to avoid rate limits
+    this.requestQueue = []; // Queue to throttle API requests
+    this.isProcessingQueue = false;
   }
 
   /**
-   * Get current price for a stock symbol
+   * Get current price for a stock symbol (REAL-TIME with Smart Rate-Limit Cache)
    * @param {string} symbol - Stock symbol (e.g., RELIANCE, TCS)
    * @returns {number} Current price
    */
@@ -18,26 +21,45 @@ class StockPriceService {
     try {
       symbol = symbol.toUpperCase();
 
-      // Check cache first
-      const cachedPrice = await this.getCachedPrice(symbol);
-      if (cachedPrice !== null) {
-        return cachedPrice;
+      // Check in-memory cache first (fastest)
+      const memCached = this.priceCache.get(symbol);
+      if (memCached && Date.now() - memCached.timestamp < this.cacheDuration) {
+        console.log(`⚡ Memory cache hit for ${symbol}: ₹${memCached.price}`);
+        return memCached.price;
       }
 
-      // Fetch from API
-      const price = await this.fetchFromAPI(symbol);
+      // Check database cache (persistent)
+      const dbCached = await this.getDBCache(symbol);
+      if (dbCached && Date.now() - new Date(dbCached.updatedAt).getTime() < this.cacheDuration) {
+        console.log(`📦 Database cache hit for ${symbol}: ₹${dbCached.price} (${Math.round((Date.now() - new Date(dbCached.updatedAt).getTime()) / 1000)}s old)`);
+        // Update memory cache
+        this.priceCache.set(symbol, { price: dbCached.price, timestamp: Date.now() });
+        return dbCached.price;
+      }
 
-      // Save to cache
-      await this.cachePrice(symbol, price);
+      // Fetch from API with rate limiting
+      console.log(`🌐 Fetching REAL-TIME price from API for ${symbol}...`);
+      const price = await this.fetchFromAPIWithThrottle(symbol);
+
+      // Update both caches
+      this.priceCache.set(symbol, { price, timestamp: Date.now() });
+      await this.setDBCache(symbol, price);
 
       return price;
     } catch (error) {
+      console.error(`❌ Failed to fetch price for ${symbol}:`, error.message);
+      // Try to return cached value even if old
+      const dbCached = await this.getDBCache(symbol);
+      if (dbCached) {
+        console.log(`⚠️ Using old database cache for ${symbol}: ₹${dbCached.price}`);
+        return dbCached.price;
+      }
       throw new AppError(`Failed to fetch price for ${symbol}: ${error.message}`, 500);
     }
   }
 
   /**
-   * Get prices for multiple symbols
+   * Get prices for multiple symbols (REAL-TIME, NO CACHE)
    * @param {array} symbols - Array of stock symbols
    * @returns {object} Object with symbol as key and price as value
    */
@@ -53,29 +75,72 @@ class StockPriceService {
       // Fetch all prices in parallel with error handling for resilience
       const pricePromises = symbols.map(symbol => 
         this.getStockPrice(symbol)
-          .then(price => ({ symbol, price, status: 'fulfilled' }))
-          .catch(error => ({ symbol, error, status: 'rejected' }))
+          .then(price => {
+            prices[symbol] = price;
+            return { symbol, price, status: 'fulfilled' };
+          })
+          .catch(error => {
+            console.warn(`⚠️ Failed to fetch price for ${symbol}:`, error.message);
+            // Set to 0 as last resort if API fails
+            prices[symbol] = 0;
+            return { symbol, error, status: 'rejected' };
+          })
       );
 
-      const results = await Promise.all(pricePromises);
+      await Promise.all(pricePromises);
 
-      // Build prices object, skip failed requests
-      results.forEach(result => {
-        if (result.status === 'fulfilled') {
-          prices[result.symbol] = result.price;
-        } else {
-          console.warn(`Failed to fetch price for ${result.symbol}:`, result.error.message);
-          // Use 0 as fallback price to avoid breaking calculations
-          prices[result.symbol] = 0;
-        }
-      });
-
+      console.log(`✅ Successfully fetched REAL-TIME prices for ${Object.keys(prices).length} symbols:`, prices);
       return prices;
     } catch (error) {
-      console.error(`Error in getMultiplePrices: ${error.message}`);
+      console.error(`❌ Error in getMultiplePrices: ${error.message}`);
       // Return empty object instead of throwing
       return {};
     }
+  }
+
+  /**
+   * Fetch price from API with request throttling to avoid rate limits
+   * @private
+   * @param {string} symbol - Stock symbol
+   * @returns {number} Current price
+   */
+  async fetchFromAPIWithThrottle(symbol) {
+    return new Promise((resolve, reject) => {
+      // Add request to queue
+      this.requestQueue.push({ symbol, resolve, reject });
+      // Process queue
+      this.processRequestQueue();
+    });
+  }
+
+  /**
+   * Process queued API requests with throttling
+   * @private
+   */
+  async processRequestQueue() {
+    if (this.isProcessingQueue || this.requestQueue.length === 0) {
+      return;
+    }
+
+    this.isProcessingQueue = true;
+
+    while (this.requestQueue.length > 0) {
+      const { symbol, resolve, reject } = this.requestQueue.shift();
+
+      try {
+        const price = await this.fetchFromAPI(symbol);
+        resolve(price);
+      } catch (error) {
+        reject(error);
+      }
+
+      // Throttle: Wait 1 second between API requests to stay under rate limit
+      if (this.requestQueue.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    this.isProcessingQueue = false;
   }
 
   /**
@@ -86,6 +151,8 @@ class StockPriceService {
    */
   async fetchFromAPI(symbol) {
     try {
+      console.log(`📡 Making API request for ${symbol}...`);
+      
       const response = await axios.get(`${this.baseURL}/quote`, {
         params: {
           symbol: symbol,
@@ -94,21 +161,35 @@ class StockPriceService {
         timeout: 5000 // 5 second timeout
       });
 
-      // TwelveData API returns data directly, not nested in response.data.data
+      console.log(`API Response for ${symbol}:`, response.data);
+
+      // TwelveData API returns data directly
       const data = response.data;
       
-      if (!data || !data.close) {
+      // Handle potential API errors
+      if (data.status === 'error' || data.code === 429) {
+        throw new Error(`API Error: ${data.message || 'Rate limit or invalid request'}`);
+      }
+
+      // Check for valid price data
+      let price;
+      if (data.last_price !== undefined) {
+        price = parseFloat(data.last_price);
+      } else if (data.close !== undefined) {
+        price = parseFloat(data.close);
+      } else {
         throw new Error(`Invalid response from API for symbol ${symbol}: ${JSON.stringify(data)}`);
       }
 
-      const price = parseFloat(data.close);
-
-      if (isNaN(price)) {
-        throw new Error(`Invalid price data for symbol ${symbol}`);
+      if (isNaN(price) || price <= 0) {
+        throw new Error(`Invalid price data for symbol ${symbol}: ${price}`);
       }
 
+      console.log(`✅ Successfully fetched REAL-TIME price for ${symbol}: ₹${price}`);
       return price;
     } catch (error) {
+      console.error(`Error fetching price for ${symbol}:`, error.message);
+      
       // If it's an axios timeout or network error, log it appropriately
       if (error.code === 'ECONNABORTED') {
         throw new Error(`API request timeout for ${symbol}`);
@@ -119,41 +200,28 @@ class StockPriceService {
   }
 
   /**
-   * Get cached price if not expired
+   * Get cached price from database
    * @private
    * @param {string} symbol - Stock symbol
-   * @returns {number|null} Cached price or null if not found/expired
+   * @returns {object|null} Cached price object or null
    */
-  async getCachedPrice(symbol) {
+  async getDBCache(symbol) {
     try {
       const cached = await PriceCache.findOne({ symbol: symbol.toUpperCase() });
-
-      if (cached) {
-        const timeDiff = new Date().getTime() - new Date(cached.updatedAt).getTime();
-
-        // Check if cache is still valid (1 hour)
-        if (timeDiff < this.cacheExpireTime) {
-          return cached.price;
-        } else {
-          // Delete expired cache
-          await PriceCache.deleteOne({ symbol: symbol.toUpperCase() });
-        }
-      }
-
-      return null;
+      return cached;
     } catch (error) {
-      // If cache lookup fails, return null and fetch from API
+      console.warn(`Failed to fetch cache from DB for ${symbol}:`, error.message);
       return null;
     }
   }
 
   /**
-   * Cache the price
+   * Save price to database cache
    * @private
    * @param {string} symbol - Stock symbol
    * @param {number} price - Stock price
    */
-  async cachePrice(symbol, price) {
+  async setDBCache(symbol, price) {
     try {
       await PriceCache.updateOne(
         { symbol: symbol.toUpperCase() },
@@ -161,24 +229,35 @@ class StockPriceService {
         { upsert: true }
       );
     } catch (error) {
-      // If caching fails, continue without cache
-      console.warn(`Failed to cache price for ${symbol}:`, error.message);
+      console.warn(`Failed to save cache to DB for ${symbol}:`, error.message);
     }
   }
 
   /**
-   * Clear cache for a symbol or all symbols
-   * @param {string} symbol - Optional. If provided, only clears cache for this symbol
+   * Clear expired cache entries
+   * @private
    */
-  async clearCache(symbol = null) {
-    try {
-      if (symbol) {
-        await PriceCache.deleteOne({ symbol: symbol.toUpperCase() });
-      } else {
-        await PriceCache.deleteMany({});
+  clearExpiredCache() {
+    const now = Date.now();
+    for (const [symbol, data] of this.priceCache.entries()) {
+      if (now - data.timestamp > this.cacheDuration) {
+        this.priceCache.delete(symbol);
+        console.log(`🗑️ Cleared expired cache for ${symbol}`);
       }
-    } catch (error) {
-      console.warn('Failed to clear cache:', error.message);
+    }
+  }
+
+  /**
+   * Manually clear cache for a symbol
+   * @param {string} symbol - Optional. If provided, clears cache for this symbol
+   */
+  clearCache(symbol = null) {
+    if (symbol) {
+      this.priceCache.delete(symbol.toUpperCase());
+      console.log(`🗑️ Cleared cache for ${symbol.toUpperCase()}`);
+    } else {
+      this.priceCache.clear();
+      console.log(`🗑️ Cleared all price cache`);
     }
   }
 }
