@@ -34,7 +34,7 @@ export const exportToCSV = (holdings, summary) => {
     csvRows.push('');
     csvRows.push('PORTFOLIO SUMMARY');
     csvRows.push(`"Total Invested (₹)","${(summary.totalInvested || 0).toFixed(2)}"`);
-    csvRows.push(`"Current Portfolio Value (₹)","${(summary.currentPortfolioValue || 0).toFixed(2)}"`);
+    csvRows.push(`"Current Portfolio Value (₹)","${(summary.currentValue || 0).toFixed(2)}"`);
     csvRows.push(`"Total Profit/Loss (₹)","${(summary.totalProfitLoss || 0).toFixed(2)}"`);
     csvRows.push(`"Total Return (%)","${(summary.totalProfitLossPercentage || 0).toFixed(2)}"`);
     csvRows.push(`"Number of Holdings","${summary.numberOfHoldings || 0}"`);
@@ -284,7 +284,7 @@ export const exportToPDF = async (holdings, summary) => {
               </div>
               <div class="summary-item">
                 <div class="summary-label">Current Value</div>
-                <div class="summary-value">₹${(summary.currentPortfolioValue || 0).toFixed(2)}</div>
+                <div class="summary-value">₹${(summary.currentValue || 0).toFixed(2)}</div>
               </div>
               <div class="summary-item">
                 <div class="summary-label">Total Gain/Loss</div>
