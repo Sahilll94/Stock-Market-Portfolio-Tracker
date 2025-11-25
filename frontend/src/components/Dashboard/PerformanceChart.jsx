@@ -22,13 +22,17 @@ export default function PerformanceChart({ data = [] }) {
   let gainPercentage = 0;
   let highestValue = 0;
   let lowestValue = Infinity;
+  let initialInvestment = 0;
 
   if (chartDataArray.length > 0) {
-    const firstData = chartDataArray[0];
+    // Sum all investments made (totalInvested from last data point)
     const lastData = chartDataArray[chartDataArray.length - 1];
+    const firstData = chartDataArray[0];
     
-    const initialInvestment = firstData.totalInvested;
+    // Total invested is the cumulative sum of all investments
+    initialInvestment = lastData.totalInvested;
     const currentValue = lastData.totalValue;
+    
     totalGain = currentValue - initialInvestment;
     gainPercentage = initialInvestment > 0 ? (totalGain / initialInvestment) * 100 : 0;
 

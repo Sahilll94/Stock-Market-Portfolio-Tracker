@@ -77,7 +77,14 @@ export default function DatePicker({ value, onChange, error = false }) {
   const handleDayClick = (day) => {
     const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setSelectedDate(newDate);
-    onChange(newDate.toISOString().split('T')[0]);
+    
+    // Format as YYYY-MM-DD in local timezone (not UTC)
+    const year = newDate.getFullYear();
+    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(newDate.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${dayStr}`;
+    
+    onChange(dateString);
     setIsOpen(false);
   };
 
@@ -291,7 +298,14 @@ export default function DatePicker({ value, onChange, error = false }) {
                 onClick={() => {
                   const today = new Date();
                   setSelectedDate(today);
-                  onChange(today.toISOString().split('T')[0]);
+                  
+                  // Format as YYYY-MM-DD in local timezone
+                  const year = today.getFullYear();
+                  const month = String(today.getMonth() + 1).padStart(2, '0');
+                  const day = String(today.getDate()).padStart(2, '0');
+                  const dateString = `${year}-${month}-${day}`;
+                  
+                  onChange(dateString);
                   setCurrentDate(today);
                   setIsOpen(false);
                 }}

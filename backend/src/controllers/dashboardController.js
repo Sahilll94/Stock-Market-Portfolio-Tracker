@@ -183,14 +183,12 @@ export const getPortfolioDistribution = catchAsync(async (req, res, next) => {
 export const getPortfolioPerformance = catchAsync(async (req, res, next) => {
   const { days = 30 } = req.query;
 
-  const transactions = await Transaction.find({
-    userId: req.user.id,
-    date: {
-      $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    }
+  // Get all transactions for this user
+  const allTransactions = await Transaction.find({
+    userId: req.user.id
   }).sort({ date: 1 });
 
-  if (!transactions || transactions.length === 0) {
+  if (!allTransactions || allTransactions.length === 0) {
     return res.status(200).json({
       success: true,
       data: {
@@ -199,44 +197,85 @@ export const getPortfolioPerformance = catchAsync(async (req, res, next) => {
     });
   }
 
-  // Get all holdings for current price calculation
-  const holdings = await Holding.find({ userId: req.user.id });
-  
-  // Fetch current prices for all unique symbols
-  const symbols = [...new Set(holdings.map((h) => h.symbol))];
-  const holdingsMap = await StockPriceService.getMultiplePrices(symbols);
+  // Calculate the cutoff date
+  const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  // Group by date and calculate cumulative investment and value
-  const performanceByDate = {};
-  const portfolioState = {}; // Track quantity of each stock by date
+  // Filter transactions within the last N days
+  const relevantTransactions = allTransactions.filter(t => t.date >= cutoffDate);
 
-  transactions.forEach((t) => {
-    const dateKey = t.date.toISOString().split('T')[0];
-
-    if (!performanceByDate[dateKey]) {
-      performanceByDate[dateKey] = {
-        date: dateKey,
-        totalInvested: 0,
-        totalValue: 0
-      };
-    }
-
-    if (t.type === 'BUY') {
-      performanceByDate[dateKey].totalInvested += t.totalValue;
-      portfolioState[t.symbol] = (portfolioState[t.symbol] || 0) + t.quantity;
-    } else {
-      performanceByDate[dateKey].totalInvested -= t.totalValue;
-      portfolioState[t.symbol] = (portfolioState[t.symbol] || 0) - t.quantity;
-    }
-
-    // Calculate current value based on portfolio state at this date
-    let currentValue = 0;
-    Object.keys(portfolioState).forEach((symbol) => {
-      const quantity = portfolioState[symbol];
-      const currentPrice = holdingsMap[symbol] || 0;
-      currentValue += quantity * currentPrice;
+  if (relevantTransactions.length === 0) {
+    return res.status(200).json({
+      success: true,
+      data: {
+        performance: []
+      }
     });
-    performanceByDate[dateKey].totalValue = currentValue;
+  }
+
+  // Calculate portfolio state BEFORE the cutoff (from all previous transactions)
+  const portfolioStateBeforeCutoff = {};
+  const costBasisBeforeCutoff = {};
+
+  allTransactions.forEach((t) => {
+    if (t.date < cutoffDate) {
+      if (t.type === 'BUY') {
+        portfolioStateBeforeCutoff[t.symbol] = (portfolioStateBeforeCutoff[t.symbol] || 0) + t.quantity;
+        costBasisBeforeCutoff[t.symbol] = (costBasisBeforeCutoff[t.symbol] || 0) + t.totalValue;
+      } else {
+        portfolioStateBeforeCutoff[t.symbol] = (portfolioStateBeforeCutoff[t.symbol] || 0) - t.quantity;
+        costBasisBeforeCutoff[t.symbol] = (costBasisBeforeCutoff[t.symbol] || 0) - t.totalValue;
+      }
+    }
+  });
+
+  // Calculate total investment BEFORE cutoff
+  const investmentBeforeCutoff = Object.values(costBasisBeforeCutoff).reduce((sum, val) => sum + val, 0);
+
+  // Now build the performance timeline for the last N days
+  const performanceByDate = {};
+  
+  // Start with the portfolio state from before cutoff
+  let currentPortfolioState = { ...portfolioStateBeforeCutoff };
+  let currentCostBasis = { ...costBasisBeforeCutoff };
+  let currentInvestment = investmentBeforeCutoff;
+
+  // Process each transaction in the relevant period
+  relevantTransactions.forEach((t) => {
+    // Format date using local time (not UTC) to preserve the date as entered by user
+    const year = t.date.getFullYear();
+    const month = String(t.date.getMonth() + 1).padStart(2, '0');
+    const day = String(t.date.getDate()).padStart(2, '0');
+    const dateKey = `${year}-${month}-${day}`;
+
+    // Update portfolio state with this transaction
+    if (t.type === 'BUY') {
+      currentPortfolioState[t.symbol] = (currentPortfolioState[t.symbol] || 0) + t.quantity;
+      currentCostBasis[t.symbol] = (currentCostBasis[t.symbol] || 0) + t.totalValue;
+      currentInvestment += t.totalValue;
+    } else {
+      currentPortfolioState[t.symbol] = (currentPortfolioState[t.symbol] || 0) - t.quantity;
+      currentCostBasis[t.symbol] = (currentCostBasis[t.symbol] || 0) - t.totalValue;
+      currentInvestment -= t.totalValue;
+    }
+
+    // Calculate portfolio value at this point
+    let totalValue = 0;
+    Object.keys(currentPortfolioState).forEach((symbol) => {
+      const quantity = currentPortfolioState[symbol];
+      const totalCost = currentCostBasis[symbol] || 0;
+      
+      if (quantity > 0 && totalCost > 0) {
+        const avgCostPerShare = totalCost / quantity;
+        totalValue += quantity * avgCostPerShare;
+      }
+    });
+
+    // Store the data point for this transaction date
+    performanceByDate[dateKey] = {
+      date: dateKey,
+      totalInvested: currentInvestment,
+      totalValue: totalValue
+    };
   });
 
   const performance = Object.values(performanceByDate).map((p) => ({

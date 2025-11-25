@@ -205,6 +205,9 @@ export const updateHolding = catchAsync(async (req, res, next) => {
     const transactionQuantity = Math.abs(quantityDifference);
     const transactionPrice = purchasePrice !== undefined ? purchasePrice : holding.purchasePrice;
 
+    // Use today's date for the transaction (when the action happens)
+    const transactionDate = new Date();
+
     await Transaction.create({
       userId: req.user.id,
       symbol: holding.symbol,
@@ -212,7 +215,7 @@ export const updateHolding = catchAsync(async (req, res, next) => {
       quantity: transactionQuantity,
       pricePerShare: transactionPrice,
       totalValue: transactionQuantity * transactionPrice,
-      date: new Date()
+      date: transactionDate
     });
   }
 
@@ -224,7 +227,9 @@ export const updateHolding = catchAsync(async (req, res, next) => {
     holding.purchasePrice = purchasePrice;
   }
 
-  if (purchaseDate !== undefined) {
+  // Only update purchaseDate if it's explicitly changed AND quantity is NOT being changed
+  // This prevents changing purchase date when selling
+  if (purchaseDate !== undefined && quantityDifference === 0) {
     holding.purchaseDate = new Date(purchaseDate);
   }
 
