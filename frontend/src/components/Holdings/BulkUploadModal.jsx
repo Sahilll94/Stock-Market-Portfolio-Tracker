@@ -359,7 +359,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
                 className={`rounded-lg p-4 ${
                   isDark ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-blue-50 border border-blue-200'
                 }`}
-              >
+              > 
                 <h3 className={`font-semibold mb-2 ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
                   Format Instructions
                 </h3>
