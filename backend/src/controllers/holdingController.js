@@ -3,6 +3,7 @@ import Transaction from '../models/Transaction.js';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/AppError.js';
 import StockPriceService from '../services/StockPriceService.js';
+import axios from 'axios';
 
 /**
  * Add a new holding
@@ -279,4 +280,194 @@ export const deleteHolding = catchAsync(async (req, res, next) => {
     success: true,
     message: 'Holding deleted successfully'
   });
+});
+
+/**
+ * Bulk create holdings
+ * POST /api/holdings/bulk
+ */
+export const bulkCreateHoldings = catchAsync(async (req, res, next) => {
+  const { holdings } = req.body;
+
+  // Validate input
+  if (!Array.isArray(holdings) || holdings.length === 0) {
+    return next(new AppError('Please provide an array of holdings to import', 400));
+  }
+
+  if (holdings.length > 100) {
+    return next(new AppError('Cannot import more than 100 holdings at once', 400));
+  }
+
+  const createdHoldings = [];
+  const errors = [];
+  const duplicates = [];
+  let successCount = 0;
+
+  // Check for duplicates and create holdings
+  for (let i = 0; i < holdings.length; i++) {
+    const holding = holdings[i];
+    const rowIndex = i + 1;
+
+    try {
+      // Validate required fields
+      if (!holding.symbol || !holding.purchasePrice || !holding.quantity || !holding.purchaseDate) {
+        errors.push(`Row ${rowIndex}: Missing required fields (symbol, quantity, purchasePrice, purchaseDate)`);
+        continue;
+      }
+
+      // Validate data types
+      if (isNaN(holding.quantity) || holding.quantity < 1) {
+        errors.push(`Row ${rowIndex}: Quantity must be a positive number`);
+        continue;
+      }
+
+      if (isNaN(holding.purchasePrice) || holding.purchasePrice <= 0) {
+        errors.push(`Row ${rowIndex}: Purchase price must be a positive number`);
+        continue;
+      }
+
+      const symbol = holding.symbol.toString().trim().toUpperCase();
+      const quantity = parseInt(holding.quantity);
+      const purchasePrice = parseFloat(holding.purchasePrice);
+      const purchaseDate = new Date(holding.purchaseDate);
+
+      // Validate date
+      if (isNaN(purchaseDate.getTime())) {
+        errors.push(`Row ${rowIndex}: Invalid date format`);
+        continue;
+      }
+
+      // Check if holding already exists for this user and symbol
+      const existingHolding = await Holding.findOne({
+        userId: req.user.id,
+        symbol
+      });
+
+      if (existingHolding) {
+        duplicates.push(symbol);
+        continue;
+      }
+
+      // Create holding
+      const newHolding = await Holding.create({
+        userId: req.user.id,
+        symbol,
+        purchasePrice,
+        quantity,
+        purchaseDate
+      });
+
+      // Create corresponding BUY transaction
+      await Transaction.create({
+        userId: req.user.id,
+        symbol,
+        type: 'BUY',
+        quantity,
+        pricePerShare: purchasePrice,
+        totalValue: quantity * purchasePrice,
+        date: purchaseDate
+      });
+
+      createdHoldings.push(newHolding);
+      successCount++;
+    } catch (error) {
+      errors.push(`Row ${rowIndex}: ${error.message}`);
+    }
+  }
+
+  res.status(201).json({
+    success: true,
+    message: `Imported ${successCount} holdings successfully`,
+    data: {
+      holdings: createdHoldings,
+      summary: {
+        imported: successCount,
+        duplicates: duplicates.length,
+        errors: errors.length,
+        skipped: duplicates.concat(errors.map(e => e.split(':')[0])).length,
+        details: {
+          duplicateSymbols: duplicates,
+          errorMessages: errors
+        }
+      }
+    }
+  });
+});
+
+/**
+ * Import holdings from Google Sheets
+ * GET /api/holdings/import/sheets?sheetId=SHEET_ID
+ */
+export const importFromGoogleSheets = catchAsync(async (req, res, next) => {
+  const { sheetId } = req.query;
+
+  if (!sheetId) {
+    return next(new AppError('Sheet ID is required', 400));
+  }
+
+  try {
+    // Construct Google Sheets CSV export URL (public sheet)
+    // gid=0 specifies the first sheet tab
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+
+    // Fetch the CSV data with proper headers
+    const response = await axios.get(csvUrl, {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    const csvData = response.data;
+
+    // Parse CSV manually (simple parser for basic CSV)
+    const lines = csvData.split('\n').filter(line => line.trim());
+    if (lines.length < 2) {
+      return next(new AppError('Sheet is empty or has no data rows', 400));
+    }
+
+    // Parse header
+    const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const symbolIndex = header.findIndex(h => h.includes('symbol') || h === 's');
+    const quantityIndex = header.findIndex(h => h.includes('quantity') || h === 'qty' || h === 'q');
+    const priceIndex = header.findIndex(h => h.includes('price') || h.includes('cost') || h === 'p');
+    const dateIndex = header.findIndex(h => h.includes('date') || h === 'd');
+
+    if (symbolIndex === -1 || quantityIndex === -1 || priceIndex === -1 || dateIndex === -1) {
+      return next(new AppError('Sheet must contain columns: symbol, quantity, purchasePrice, purchaseDate', 400));
+    }
+
+    // Parse data rows
+    const holdings = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split(',').map(cell => cell.trim());
+      if (!cells[symbolIndex] || !cells[quantityIndex] || !cells[priceIndex] || !cells[dateIndex]) {
+        continue; // Skip incomplete rows
+      }
+
+      holdings.push({
+        symbol: cells[symbolIndex],
+        quantity: parseInt(cells[quantityIndex]),
+        purchasePrice: parseFloat(cells[priceIndex]),
+        purchaseDate: cells[dateIndex]
+      });
+    }
+
+    if (holdings.length === 0) {
+      return next(new AppError('No valid data found in sheet', 400));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Loaded ${holdings.length} holdings from Google Sheet`,
+      data: {
+        holdings
+      }
+    });
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return next(new AppError('Sheet not found. Make sure it\'s publicly shared.', 404));
+    }
+    return next(new AppError('Failed to fetch Google Sheet. Make sure it\'s publicly shared.', 400));
+  }
 });

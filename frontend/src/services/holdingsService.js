@@ -6,6 +6,7 @@ export const holdingsService = {
   create: (data) => api.post('/holdings', data),
   update: (id, data) => api.put(`/holdings/${id}`, data),
   delete: (id) => api.delete(`/holdings/${id}`),
+  bulkCreate: (holdings) => api.post('/holdings/bulk', { holdings }),
 };
 
 export default holdingsService;

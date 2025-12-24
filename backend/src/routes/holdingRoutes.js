@@ -10,6 +10,8 @@ router.use(protect);
 // Holdings routes
 router.post('/', holdingController.addHolding);
 router.get('/', holdingController.getHoldings);
+router.post('/bulk', holdingController.bulkCreateHoldings);
+router.get('/import/sheets', holdingController.importFromGoogleSheets);
 router.get('/:id', holdingController.getHoldingById);
 router.put('/:id', holdingController.updateHolding);
 router.delete('/:id', holdingController.deleteHolding);

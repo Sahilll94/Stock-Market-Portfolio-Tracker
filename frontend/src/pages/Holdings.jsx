@@ -4,12 +4,13 @@ import HoldingsList from '../components/Holdings/HoldingsList';
 import AddHoldingModal from '../components/Holdings/AddHoldingModal';
 import EditHoldingModal from '../components/Holdings/EditHoldingModal';
 import ConfirmDeleteModal from '../components/Holdings/ConfirmDeleteModal';
+import BulkUploadModal from '../components/Holdings/BulkUploadModal';
 import { useHoldings } from '../hooks/useHoldings';
 import { useTheme } from '../contexts/ThemeContext';
 import holdingsService from '../services/holdingsService';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import toast from 'react-hot-toast';
-import { Plus, Briefcase, Download, FileText } from 'lucide-react';
+import { Plus, Briefcase, Download, FileText, Upload } from 'lucide-react';
 
 export default function Holdings() {
   const { holdings, setHoldings, setSummary, summary } = useHoldings();
@@ -17,6 +18,7 @@ export default function Holdings() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [selectedHolding, setSelectedHolding] = useState(null);
   const [holdingToDelete, setHoldingToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -201,6 +203,18 @@ export default function Holdings() {
           >
             <FileText size={20} className="group-hover:scale-110 transition-transform" />
           </button>
+          {/* Bulk Import Button */}
+          <button
+            onClick={() => setIsBulkUploadOpen(true)}
+            className={`p-2.5 rounded-lg transition-all duration-300 group ${
+              isDark
+                ? 'hover:bg-gray-700/50 text-purple-400 hover:text-purple-300'
+                : 'hover:bg-gray-100 text-purple-600 hover:text-purple-700'
+            }`}
+            title="Bulk import holdings"
+          >
+            <Upload size={20} className="group-hover:scale-110 transition-transform" />
+          </button>
           {/* Add Button */}
           <button
             onClick={() => setIsAddOpen(true)}
@@ -252,6 +266,15 @@ export default function Holdings() {
         }}
         itemName={holdingToDelete?.symbol || 'this holding'}
         isDeleting={isDeleting}
+      />
+
+      <BulkUploadModal
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+        onSuccess={() => {
+          setIsBulkUploadOpen(false);
+          fetchHoldings();
+        }}
       />
     </MainLayout>
   );

@@ -25,14 +25,14 @@ export default function PerformanceChart({ data = [] }) {
   let initialInvestment = 0;
 
   if (chartDataArray.length > 0) {
-    // Sum all investments made (totalInvested from last data point)
+    // Get the last data point (current state)
     const lastData = chartDataArray[chartDataArray.length - 1];
-    const firstData = chartDataArray[0];
     
-    // Total invested is the cumulative sum of all investments
+    // Total invested and current value from the last data point
     initialInvestment = lastData.totalInvested;
     const currentValue = lastData.totalValue;
     
+    // Gain/Loss = Current Portfolio Value - Total Amount Invested
     totalGain = currentValue - initialInvestment;
     gainPercentage = initialInvestment > 0 ? (totalGain / initialInvestment) * 100 : 0;
 
