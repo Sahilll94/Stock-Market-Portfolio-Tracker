@@ -225,6 +225,11 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
         setSummary(response.data.data.summary);
         setStep('success');
         toast.success(`Successfully imported ${response.data.data.summary.imported} holdings!`);
+        
+        // Call onSuccess to refresh holdings in parent component
+        setTimeout(() => {
+          onSuccess?.();
+        }, 1000);
       }
     } catch (error) {
       setErrors([error.response?.data?.message || 'Import failed']);
