@@ -331,15 +331,15 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { id: 'csv', label: 'CSV', icon: '📄' },
-                  { id: 'json', label: 'JSON', icon: '{}' },
-                  { id: 'excel', label: 'Excel', icon: '📊' },
-                  { id: 'sheets', label: 'Google Sheets', icon: '☁️' },
+                  { id: 'csv', label: 'CSV', icon: '/csv-logo-Photoroom.png' },
+                  { id: 'json', label: 'JSON', icon: '/json-logo-Photoroom.png' },
+                  { id: 'excel', label: 'Excel', icon: '/excel-sheet-logo-Photoroom.png' },
+                  { id: 'sheets', label: 'Google Sheets', icon: '/google-sheet-logo-Photoroom.png' },
                 ].map((format) => (
                   <button
                     key={format.id}
                     onClick={() => setUploadType(format.id)}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center ${
                       uploadType === format.id
                         ? isDark
                           ? 'border-blue-500 bg-blue-500/10'
@@ -349,7 +349,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
                           : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="text-2xl mb-2">{format.icon}</div>
+                    <img src={format.icon} alt={format.label} className="h-20 w-20 mb-2 object-contain" />
                     <div className={`font-semibold text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                       {format.label}
                     </div>
